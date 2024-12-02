@@ -3,6 +3,8 @@ from fastapi.staticfiles import StaticFiles
 from typing import Annotated
 from enum import Enum
 
+from db import engine, create_db_and_tables, get_session
+
 class TrashType(str, Enum):
     paper = "paper"
     plastic = "plastic"
@@ -12,8 +14,9 @@ class TrashType(str, Enum):
 class ItemOrder(str, Enum):
     id = "id"
 
-
+create_db_and_tables()
 app = FastAPI()
+
 
 # Directory for storing public static files
 # Photos are stored in /static/photos
