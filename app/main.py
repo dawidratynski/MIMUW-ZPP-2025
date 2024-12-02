@@ -1,30 +1,32 @@
-from fastapi import FastAPI, Query
+from fastapi import Depends, FastAPI, HTTPException, Query
 from fastapi.staticfiles import StaticFiles
 from typing import Annotated
-from enum import Enum
+from sqlmodel import Session
 
+from data_enums import TrashType, ItemOrder
 from db import engine, create_db_and_tables, get_session
+from models import Item
 
-class TrashType(str, Enum):
-    paper = "paper"
-    plastic = "plastic"
-    glass = "glass"
-    other = "other"
 
-class ItemOrder(str, Enum):
-    id = "id"
+
+SessionDep = Annotated[Session, Depends(get_session)]
 
 create_db_and_tables()
 app = FastAPI()
+
 
 
 # Directory for storing public static files
 # Photos are stored in /static/photos
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
+
+
 @app.get("/")
 async def root():
     pass
+
+
 
 @app.get("/api/v1/item/search")
 async def search_items(
@@ -49,6 +51,19 @@ async def search_items(
     pass
 
 
+
+@app.post("/api/v1/item/submit")
+async def get_item(item: Item, session: SessionDep):
+    session.add(item)
+    session.commit()
+    session.refresh(item)
+    return item
+
+
+
 @app.get("/api/v1/item/{item_id}")
-async def get_item(item_id: int):
-    pass
+async def get_item(item_id: int, session: SessionDep):
+    item = session.get(Item, item_id)
+    if not item:
+        raise HTTPException(status_code=404, detail="Hero not found")
+    return item
