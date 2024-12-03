@@ -5,8 +5,8 @@ from data_enums import TrashType
 # Common public data about Items
 class ItemBase(SQLModel):
     type: TrashType = Field(default=TrashType.other)
-    latitude: float = Field()
-    longitude: float = Field()
+    latitude: float = Field(ge=-90, le=90)
+    longitude: float = Field(ge=-180, le=180)
     
 
 # Data about Items stored in db
