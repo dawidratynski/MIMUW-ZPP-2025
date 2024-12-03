@@ -9,7 +9,7 @@ services:
     depends_on:
       - db
     env_file:
-      - .dev.env 
+      - .env
     environment:
       - POSTGRES_HOST=db
   db:
@@ -19,7 +19,7 @@ services:
     ports:
       - 5432:5432
     env_file:
-      - .dev.env 
+      - .env 
 
 volumes:
   postgres_data:
