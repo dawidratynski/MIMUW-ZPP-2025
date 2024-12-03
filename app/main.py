@@ -26,29 +26,6 @@ app.mount("/static", StaticFiles(directory="static"), name="static")
 async def root():
     pass
 
-# @app.get("/api/v1/item/search")
-# async def search_items(
-#     types: Annotated[list[TrashType] | None, Query()] = None,
-#     collected: bool | None = None,
-#     offset: Annotated[int, Query(ge=0)] = 0,
-#     order_by: ItemOrder = ItemOrder.id,
-#     lat_min: Annotated[int, Query(ge=-90, le=90)] = -90,
-#     lat_max: Annotated[int, Query(ge=-90, le=90)] = 90,
-#     lon_min: Annotated[int, Query(ge=-180, le=180)] = -180,
-#     lon_max: Annotated[int, Query(ge=-180, le=180)] = 180,
-#     count: int = 50,
-    
-#     # TODO:
-#     # nowrap_lon
-#     # time_min
-#     # time_max
-#     # submitted_by: 
-#     # # Tolerance used to determine results (in degrees)
-#     # location_tolerance: float = 0.000001,  # Default: <= 11 cm
-# ):
-#     pass
-
-
 
 @app.post("/api/v1/item/submit", response_model=ItemPublic)
 async def create_item(item: ItemCreate, session: SessionDep):
@@ -71,6 +48,31 @@ async def list_items(
         .limit(limit)
     ).all()
     return items
+
+
+@app.get("/api/v1/item/search", response_model=list[ItemPublic])
+async def search_items(
+    session: SessionDep,
+    offset: Annotated[int, Query(ge=0)] = 0,
+    limit: Annotated[int, Query(le=50)] = 50,
+
+    item_type: Annotated[TrashType | None, Query()] = None,
+    lat_min: Annotated[float, Query(ge=-90, le=90)] = -90,
+    lat_max: Annotated[float, Query(ge=-90, le=90)] = 90,
+    lon_min: Annotated[float, Query(ge=-180, le=180)] = -180,
+    lon_max: Annotated[float, Query(ge=-180, le=180)] = 180,
+):
+    return session.exec(
+        select(Item)
+        .filter((item_type is None) or (Item.type == item_type))
+        .filter(Item.latitude >= lat_min)
+        .filter(Item.latitude <= lat_max)
+        # TODO: Handle wraparounds
+        .filter(Item.longitude >= lon_min)
+        .filter(Item.longitude <= lon_max)
+        .offset(offset)
+        .limit(limit)
+    ).all()
 
 
 @app.get("/api/v1/item/{item_id}", response_model=ItemPublic)
