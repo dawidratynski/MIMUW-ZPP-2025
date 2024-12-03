@@ -1,4 +1,5 @@
 from fastapi import Depends, FastAPI, HTTPException, Query
+from fastapi.responses import RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from typing import Annotated
 from sqlmodel import Session, select
@@ -21,6 +22,9 @@ app = FastAPI()
 app.mount("/static", StaticFiles(directory="static"), name="static")
 app.mount("/web", StaticFiles(directory="frontend", html=True), name="frontend")
 
+@app.get("/")
+async def root():
+    return RedirectResponse("/web/", status_code=301)
 
 @app.post("/api/v1/item/submit", response_model=ItemPublic)
 async def create_item(item: ItemCreate, session: SessionDep):
