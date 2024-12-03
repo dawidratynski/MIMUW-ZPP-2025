@@ -3,7 +3,7 @@ from fastapi.staticfiles import StaticFiles
 from typing import Annotated
 from sqlmodel import Session, select
 
-from data_enums import TrashType, ItemOrder
+from data_enums import TrashType
 from db import engine, create_db_and_tables, get_session
 from models import Item, ItemCreate, ItemPublic
 
@@ -19,12 +19,7 @@ app = FastAPI()
 # Directory for storing public static files
 # Photos are stored in /static/photos
 app.mount("/static", StaticFiles(directory="static"), name="static")
-
-
-
-@app.get("/")
-async def root():
-    pass
+app.mount("/", StaticFiles(directory="frontend", html=True), name="frontend")
 
 
 @app.post("/api/v1/item/submit", response_model=ItemPublic)
