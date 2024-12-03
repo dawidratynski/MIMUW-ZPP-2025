@@ -32,6 +32,7 @@ async function initMap() {
         .then(data => {
             data.forEach(item => {
                 const { id, latitude, longitude, type } = item;
+                const photo_url = '/static/photos/test.jpg';
 
                 const pin_background_color = ({
                     plastic: 'Gold',
@@ -65,7 +66,10 @@ async function initMap() {
                     const { target } = domEvent;
 
                     infoWindow.close();
-                    infoWindow.setContent(marker.title);
+                    infoWindow.setContent(
+                        `<h2>${marker.title}</h2>` + 
+                        `<img src=${photo_url} alt="photo" height="300">`
+                    );
                     infoWindow.open(marker.map, marker);
                 });
 
