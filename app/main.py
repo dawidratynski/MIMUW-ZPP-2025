@@ -19,7 +19,7 @@ app = FastAPI()
 # Directory for storing public static files
 # Photos are stored in /static/photos
 app.mount("/static", StaticFiles(directory="static"), name="static")
-app.mount("/", StaticFiles(directory="frontend", html=True), name="frontend")
+app.mount("/web", StaticFiles(directory="frontend", html=True), name="frontend")
 
 
 @app.post("/api/v1/item/submit", response_model=ItemPublic)
