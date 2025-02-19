@@ -5,9 +5,9 @@ from typing import Optional
 
 import jwt
 from fastapi import Depends, HTTPException, status
-from fastapi.security import (HTTPAuthorizationCredentials, HTTPBearer,
-                              SecurityScopes)
-from utils.settings import get_settings
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer, SecurityScopes
+
+from core.config import settings
 
 
 class UnauthorizedException(HTTPException):
@@ -29,7 +29,7 @@ class VerifyToken:
     """
 
     def __init__(self):
-        self.config = get_settings()
+        self.config = settings
 
         # This gets the JWKS from a given URL and does processing so you can
         # use any of the keys available
@@ -70,7 +70,7 @@ class VerifyToken:
 
         return payload
 
-    def _check_claims(self, payload, claim_name, expected_value):
+    def _check_claims(self, payload, claim_name, expected_value) -> None:
         if claim_name not in payload:
             raise UnauthorizedException(
                 detail=f'No claim "{claim_name}" found in token'
