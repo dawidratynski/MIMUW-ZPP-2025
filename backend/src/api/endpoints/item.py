@@ -1,10 +1,12 @@
 from typing import Annotated
+
 from fastapi import APIRouter, HTTPException, Query, Security
 from sqlmodel import select
 
-from core.db import SessionDep
 from core.auth import VerifyToken
-from core.models.item import *
+from core.db import SessionDep
+from core.models.enums import TrashType
+from core.models.item import Item, ItemCreate, ItemPublic
 
 auth = VerifyToken()
 
@@ -17,7 +19,9 @@ def home():
 
 
 @router.post("/submit", response_model=ItemPublic)
-async def create_item(item: ItemCreate, session: SessionDep, auth_result: str = Security(auth.verify)):
+async def create_item(
+    item: ItemCreate, session: SessionDep, auth_result: str = Security(auth.verify)
+):
     db_item = Item.model_validate(item)
     session.add(db_item)
     session.commit()
