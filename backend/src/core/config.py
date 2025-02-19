@@ -1,5 +1,5 @@
 from pydantic import AnyHttpUrl
-from pydantic_settings import BaseSettings
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
@@ -27,9 +27,9 @@ class Settings(BaseSettings):
             f"@{self.postgres_host}/{self.postgres_db}"
         )
 
-    class Config:
-        case_sensitive = False
-        env_file = None
+    model_config = SettingsConfigDict(
+        case_sensitive=False,
+    )
 
 
 settings = Settings()

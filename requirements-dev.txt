@@ -3,3 +3,5 @@ isort
 flake8
 mypy
 pytest
+pydantic
+pydantic-settings
