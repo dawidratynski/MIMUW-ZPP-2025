@@ -5,20 +5,14 @@ from sqlmodel import select
 
 from core.auth import VerifyToken
 from core.db import SessionDep
-from core.models.enums import TrashType
-from core.models.item import Item, ItemCreate, ItemPublic
+from core.models.item import Item, ItemCreate, ItemResponse, ItemType
 
 auth = VerifyToken()
 
 router = APIRouter(prefix="/item")
 
 
-@router.get("/")
-def home():
-    return "Hello, World!"
-
-
-@router.post("/submit", response_model=ItemPublic)
+@router.post("/submit", response_model=ItemResponse)
 async def create_item(
     item: ItemCreate, session: SessionDep, auth_result: str = Security(auth.verify)
 ):
@@ -29,22 +23,23 @@ async def create_item(
     return db_item
 
 
-@router.get("/list", response_model=list[ItemPublic])
+@router.get("/list", response_model=list[ItemResponse])
 async def list_items(
     session: SessionDep,
     offset: Annotated[int, Query(ge=0)] = 0,
     limit: Annotated[int, Query(le=50)] = 50,
 ):
     items = session.exec(select(Item).offset(offset).limit(limit)).all()
-    return items
+    return [item.into_response_model() for item in items]
+    # return items
 
 
-@router.get("/search", response_model=list[ItemPublic])
+@router.get("/search", response_model=list[ItemResponse])
 async def search_items(
     session: SessionDep,
     offset: Annotated[int, Query(ge=0)] = 0,
     limit: Annotated[int, Query(le=50)] = 50,
-    item_type: Annotated[TrashType | None, Query()] = None,
+    item_type: Annotated[ItemType | None, Query()] = None,
     lat_min: Annotated[float, Query(ge=-90, le=90)] = -90,
     lat_max: Annotated[float, Query(ge=-90, le=90)] = 90,
     lon_min: Annotated[float, Query(ge=-180, le=180)] = -180,
@@ -63,7 +58,7 @@ async def search_items(
     ).all()
 
 
-@router.get("/{item_id}", response_model=ItemPublic)
+@router.get("/{item_id}", response_model=ItemResponse)
 async def get_item(item_id: int, session: SessionDep):
     item = session.get(Item, item_id)
     if not item:

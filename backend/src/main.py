@@ -3,6 +3,9 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from api import api
 from core.config import settings
+from core.db import setup_db
+
+setup_db()
 
 app = FastAPI(title=settings.project_name)
 

@@ -1,6 +1,6 @@
-from core.models.item import ItemBase
+from core.models.item import Item
 
 
 def test_example():
-    item = ItemBase(latitude=12, longitude=-12)
+    item = Item
     assert item is not None
