@@ -1,5 +1,6 @@
 from enum import Enum
 
+
 class TrashType(str, Enum):
     paper = "paper"
     plastic = "plastic"

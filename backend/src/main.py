@@ -1,6 +1,5 @@
 from fastapi import FastAPI, Security
 from fastapi.middleware.cors import CORSMiddleware
-
 from utils.auth import VerifyToken
 
 app = FastAPI()
@@ -14,9 +13,11 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+
 @app.get("/")
 def home():
     return "Hello, World!"
+
 
 @app.get("/api/public")
 def public():
@@ -24,10 +25,13 @@ def public():
 
     result = {
         "status": "success",
-        "msg": ("Hello from a public endpoint! You don't need to be "
-                "authenticated to see this.")
+        "msg": (
+            "Hello from a public endpoint! You don't need to be "
+            "authenticated to see this."
+        ),
     }
     return result
+
 
 @app.get("/api/private")
 def private(auth_result: str = Security(auth.verify)):
@@ -36,7 +40,7 @@ def private(auth_result: str = Security(auth.verify)):
 
 
 @app.get("/api/private-scoped")
-def private_scoped(auth_result: str = Security(auth.verify, scopes=['dev:test_scope'])):
+def private_scoped(auth_result: str = Security(auth.verify, scopes=["dev:test_scope"])):
     """A valid access token and an appropriate scope are required to access
     this route
     """

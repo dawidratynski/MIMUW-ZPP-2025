@@ -1,5 +1,5 @@
-from sqlmodel import Field, SQLModel
 from data_enums import TrashType
+from sqlmodel import Field, SQLModel
 
 
 # Common public data about Items
@@ -7,7 +7,7 @@ class ItemBase(SQLModel):
     type: TrashType = Field(default=TrashType.other)
     latitude: float = Field(ge=-90, le=90)
     longitude: float = Field(ge=-180, le=180)
-    
+
 
 # Data about Items stored in db
 class Item(ItemBase, table=True):

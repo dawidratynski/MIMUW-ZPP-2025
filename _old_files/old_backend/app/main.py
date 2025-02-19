@@ -1,14 +1,12 @@
+from typing import Annotated
+
+from data_enums import TrashType
+from db import create_db_and_tables, engine, get_session
 from fastapi import Depends, FastAPI, HTTPException, Query
 from fastapi.responses import RedirectResponse
 from fastapi.staticfiles import StaticFiles
-from typing import Annotated
-from sqlmodel import Session, select
-
-from data_enums import TrashType
-from db import engine, create_db_and_tables, get_session
 from models import Item, ItemCreate, ItemPublic
-
-
+from sqlmodel import Session, select
 
 SessionDep = Annotated[Session, Depends(get_session)]
 
@@ -16,15 +14,16 @@ create_db_and_tables()
 app = FastAPI()
 
 
-
 # Directory for storing public static files
 # Photos are stored in /static/photos
 app.mount("/static", StaticFiles(directory="static"), name="static")
 app.mount("/web", StaticFiles(directory="frontend", html=True), name="frontend")
 
+
 @app.get("/")
 async def root():
     return RedirectResponse("/web/", status_code=301)
+
 
 @app.post("/api/v1/item/submit", response_model=ItemPublic)
 async def create_item(item: ItemCreate, session: SessionDep):
@@ -41,11 +40,7 @@ async def list_items(
     offset: Annotated[int, Query(ge=0)] = 0,
     limit: Annotated[int, Query(le=50)] = 50,
 ):
-    items = session.exec(
-        select(Item)
-        .offset(offset)
-        .limit(limit)
-    ).all()
+    items = session.exec(select(Item).offset(offset).limit(limit)).all()
     return items
 
 
@@ -54,7 +49,6 @@ async def search_items(
     session: SessionDep,
     offset: Annotated[int, Query(ge=0)] = 0,
     limit: Annotated[int, Query(le=50)] = 50,
-
     item_type: Annotated[TrashType | None, Query()] = None,
     lat_min: Annotated[float, Query(ge=-90, le=90)] = -90,
     lat_max: Annotated[float, Query(ge=-90, le=90)] = 90,
