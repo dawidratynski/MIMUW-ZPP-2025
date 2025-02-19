@@ -1,0 +1,9 @@
+fastapi[standard]>=0.115.0,<0.116.0
+uvicorn[standard]>=0.32.0,<0.33.0
+
+# pydantic-settings
+# pyjwt[crypto]
+
+# pydantic>=2.7.0,<3.0.0
+# sqlmodel
+# psycopg2-binary

@@ -68,7 +68,7 @@ async function initMap() {
                     infoWindow.close();
                     infoWindow.setContent(
                         `<h2>${marker.title}</h2>` + 
-                        `<img src=${photo_url} alt="photo" height="300">`
+                        `<img src=${photo_url} alt="photo" height="100">`
                     );
                     infoWindow.open(marker.map, marker);
                 });

@@ -1,6 +1,8 @@
 FROM python:3.13.0-slim
 
-WORKDIR /app
+WORKDIR /backend
+
+RUN pip install --upgrade pip
 
 COPY requirements.txt .
 RUN pip install --no-cache-dir --upgrade -r requirements.txt
@@ -12,4 +14,4 @@ ENV PYTHONUNBUFFERED 1
 
 COPY . .
 
-CMD ["fastapi", "dev", "app/main.py", "--port", "9090", "--host", "0.0.0.0"]
+CMD ["fastapi", "dev", "src/main.py", "--port", "9090", "--host", "0.0.0.0"]
