@@ -1,5 +1,6 @@
 from datetime import datetime
 from enum import Enum
+from typing import Optional
 
 from pydantic import BaseModel
 from sqlmodel import Field, Relationship, SQLModel
@@ -19,7 +20,7 @@ class PhotoPixel(BaseModel):
 
 
 class BoundingBox(SQLModel, table=True):  # type: ignore
-    id: int = Field(default=None, primary_key=True)
+    id: Optional[int] = Field(default=None, primary_key=True)
 
     item_id: int = Field(foreign_key="item.id")
     item: "Item" = Relationship(back_populates="bounding_boxes")
@@ -57,11 +58,11 @@ class ItemResponse(BaseModel):
     latitude: float = Field(ge=-90, le=90)
     longitude: float = Field(ge=-180, le=180)
 
-    boundng_boxes: list[tuple[PhotoPixel, PhotoPixel, ItemType]]
+    bounding_boxes: list[tuple[PhotoPixel, PhotoPixel, ItemType]]
 
 
 class Item(SQLModel, table=True):  # type: ignore
-    id: int = Field(default=None, primary_key=True)
+    id: Optional[int] = Field(default=None, primary_key=True)
     photo_id: str
     user_id: str
 
@@ -73,7 +74,10 @@ class Item(SQLModel, table=True):  # type: ignore
     bounding_boxes: list[BoundingBox] = Relationship(back_populates="item")
 
     def into_response_model(self) -> ItemResponse:
+        data = self.model_dump()
+        data["bounding_boxes"] = [
+            bb.into_response_model() for bb in self.bounding_boxes
+        ]
         return ItemResponse(
-            **self,
-            bounding_boxes=[bb.into_response_model() for bb in self.bounding_boxes]
+            **data,
         )
