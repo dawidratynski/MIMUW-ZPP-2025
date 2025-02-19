@@ -1,11 +1,14 @@
 from fastapi import APIRouter, Security
 
 from core.auth import VerifyToken
+from api.endpoints import item
 
 auth = VerifyToken()
 
 
 router = APIRouter(prefix="/api/v1")
+
+router.include_router(item.router)
 
 
 @router.get("/")

@@ -1,3 +1,5 @@
+# TODO: Rework
+
 from sqlmodel import Field, SQLModel
 
 from core.models.types import TrashType
