@@ -1,8 +1,13 @@
+# Linting
 black
 isort
 flake8
 mypy
+
+# Testing
 pytest
+
+# Type annotations & type checking
 pydantic
 pydantic-settings
 aiofiles

@@ -1,12 +1,15 @@
-fastapi[standard]>=0.115.0,<0.116.0
-uvicorn[standard]>=0.32.0,<0.33.0
+fastapi[standard]~=0.115.10
+uvicorn[standard]~=0.34.0
+pydantic~=2.10.6
+pydantic-settings~=2.8.1
 
-pydantic-settings
-pyjwt[crypto]
+# File upload
+aiofiles~=24.1.0
+python-multipart==0.0.20
 
-pydantic>=2.7.0,<3.0.0
-sqlmodel
-psycopg2-binary
+# Database
+sqlmodel==0.0.23
+psycopg2-binary~=2.9.10
 
-python-multipart
-aiofiles
+# Authentication
+pyjwt[crypto]~=2.10.1
