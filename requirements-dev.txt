@@ -5,3 +5,5 @@ mypy
 pytest
 pydantic
 pydantic-settings
+aiofiles
+types-aiofiles

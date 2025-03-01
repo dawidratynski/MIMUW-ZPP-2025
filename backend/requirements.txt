@@ -7,3 +7,6 @@ pyjwt[crypto]
 pydantic>=2.7.0,<3.0.0
 sqlmodel
 psycopg2-binary
+
+python-multipart
+aiofiles
