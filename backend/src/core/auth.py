@@ -41,6 +41,9 @@ class VerifyToken:
         security_scopes: SecurityScopes,
         token: Optional[HTTPAuthorizationCredentials] = Depends(HTTPBearer()),
     ):
+        if settings.skip_auth:
+            return "Auth was skipped"
+
         if token is None:
             raise UnauthenticatedException
 

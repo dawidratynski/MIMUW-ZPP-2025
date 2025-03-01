@@ -6,6 +6,7 @@ class Settings(BaseSettings):
     # General
     project_name: str
     backend_cors_origins: list[AnyHttpUrl] = []
+    skip_auth: bool  # Temporary, for easy disabling of auth during development
 
     # Auth0
     auth0_domain: str
