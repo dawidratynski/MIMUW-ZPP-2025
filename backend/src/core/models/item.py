@@ -4,7 +4,7 @@ from typing import Self
 
 from fastapi import UploadFile
 from pydantic import model_validator
-from sqlmodel import Field, Relationship, SQLModel
+from sqlmodel import Field, Index, Relationship, SQLModel
 
 
 class ItemType(str, Enum):
@@ -44,7 +44,7 @@ class BoundingBoxResponse(BoundingBoxBase):
 class BoundingBox(BoundingBoxBase, table=True):  # type: ignore
     id: int | None = Field(default=None, primary_key=True)
 
-    item_id: int = Field(foreign_key="item.id")
+    item_id: int = Field(foreign_key="item.id", index=True)
     item: "Item" = Relationship(back_populates="bounding_boxes")
 
     def into_response(self) -> BoundingBoxResponse:
@@ -63,9 +63,9 @@ class BoundingBox(BoundingBoxBase, table=True):  # type: ignore
 
 class ItemBase(SQLModel):
     user_id: str
-    created_at: datetime
-    latitude: float = Field(ge=-90, le=90)
-    longitude: float = Field(ge=-180, le=180)
+    created_at: datetime = Field(index=True)
+    latitude: float = Field(ge=-90, le=90, index=True)
+    longitude: float = Field(ge=-180, le=180, index=True)
 
 
 class ItemCreate(ItemBase):
@@ -78,7 +78,6 @@ class ItemCreate(ItemBase):
 class ItemResponse(ItemBase):
     id: int = Field(default=None, primary_key=True)
     photo_id: str
-    user_id: str
     uploaded_at: datetime
     bounding_boxes: list[BoundingBoxResponse]
 
@@ -86,7 +85,7 @@ class ItemResponse(ItemBase):
 class Item(ItemBase, table=True):  # type: ignore
     id: int | None = Field(default=None, primary_key=True)
     photo_id: str
-    uploaded_at: datetime
+    uploaded_at: datetime = Field(index=True)
     bounding_boxes: list[BoundingBox] = Relationship(back_populates="item")
 
     def into_response(self) -> ItemResponse:
@@ -94,3 +93,5 @@ class Item(ItemBase, table=True):  # type: ignore
             **self.model_dump(),
             bounding_boxes=[bb.into_response() for bb in self.bounding_boxes],
         )
+
+    __table_args__ = (Index("idx_item_latitude_longitude", "latitude", "longitude"),)

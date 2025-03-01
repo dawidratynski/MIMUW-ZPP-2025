@@ -13,5 +13,5 @@ router.include_router(auth_example.router)
 
 
 @router.get("/")
-def home():
+def hello_world():
     return "Hello, World!"

@@ -6,7 +6,7 @@ import aiofiles
 from fastapi import APIRouter, Form, HTTPException, Query, Security
 from pydantic import TypeAdapter
 from pydantic_core import ValidationError
-from sqlmodel import select
+from sqlmodel import or_, select
 
 from core.auth import VerifyToken
 from core.db import SessionDep
@@ -16,6 +16,7 @@ from core.models.item import (
     Item,
     ItemCreate,
     ItemResponse,
+    ItemType,
 )
 
 auth = VerifyToken()
@@ -55,22 +56,27 @@ async def _validate_and_save_submission(
     return photo_id
 
 
-@router.post("/submit", response_model=ItemResponse)
-async def create_item(
-    item: Annotated[ItemCreate, Form(media_type="multipart/form-data")],
-    session: SessionDep,
-    auth_result: str = Security(auth.verify),
-):
+def _extract_bounding_boxes(item: ItemCreate) -> list[BoundingBoxRequest]:
     try:
-        bounding_boxes = [
+        return [
             BoundingBox.from_request(bb)
             for bb in TypeAdapter(List[BoundingBoxRequest]).validate_json(
                 item.bounding_boxes_json
             )
         ]
     except ValidationError:
-        raise HTTPException(status_code=400, detail="Provided bounding boxes JSON is invalid")
+        raise HTTPException(
+            status_code=400, detail="Provided bounding boxes JSON is invalid"
+        )
 
+
+@router.post("/submit", response_model=ItemResponse)
+async def create_item(
+    item: Annotated[ItemCreate, Form(media_type="multipart/form-data")],
+    session: SessionDep,
+    auth_result: str = Security(auth.verify),
+):
+    bounding_boxes = _extract_bounding_boxes(item)
     photo_id = await _validate_and_save_submission(item, bounding_boxes)
 
     item = Item(
@@ -87,37 +93,87 @@ async def create_item(
     return saved_item.into_response()
 
 
-@router.get("/list", response_model=list[ItemResponse])
-def list_items(
-    session: SessionDep,
-    offset: Annotated[int, Query(ge=0)] = 0,
-    limit: Annotated[int, Query(le=50)] = 50,
-):
-    items = session.exec(select(Item).offset(offset).limit(limit)).all()
-    return [item.into_response() for item in items]
-
-
-# TODO - Complete rework
 @router.get("/search", response_model=list[ItemResponse])
-def search_items(
+def search_items(  # noqa: C901
+    # fmt: off
     session: SessionDep,
-    offset: Annotated[int, Query(ge=0)] = 0,
-    limit: Annotated[int, Query(le=50)] = 50,
-    lat_min: Annotated[float, Query(ge=-90, le=90)] = -90,
-    lat_max: Annotated[float, Query(ge=-90, le=90)] = 90,
-    lon_min: Annotated[float, Query(ge=-180, le=180)] = -180,
-    lon_max: Annotated[float, Query(ge=-180, le=180)] = 180,
+
+    offset: int = Query(ge=0, default=0),
+    limit: int = Query(le=1000, default=100),
+
+    author_id: str | None = None,
+
+    created_before: datetime | None = None,
+    created_after: datetime | None = None,
+
+    uploaded_before: datetime | None = None,
+    uploaded_after: datetime | None = None,
+
+    latitude_min: float | None = Query(ge=-90, le=90, default=None),
+    latitude_max: float | None = Query(ge=-90, le=90, default=None),
+
+    longitude_min: float | None = Query(ge=-180, le=180, default=None),
+    longitude_max: float | None = Query(ge=-180, le=180, default=None),
+
+    nearby_center_latitude: float | None = Query(ge=-90, le=90, default=None),
+    nearby_center_longitude: float | None = Query(ge=-180, le=180, default=None),
+    nearby_radius: float | None = None,
+
+    contains_item_type: ItemType | None = None,
+    # fmt: on
 ):
-    items = session.exec(
-        select(Item)
-        .filter(Item.latitude >= lat_min)
-        .filter(Item.latitude <= lat_max)
-        # TODO: Handle wraparounds
-        .filter(Item.longitude >= lon_min)
-        .filter(Item.longitude <= lon_max)
-        .offset(offset)
-        .limit(limit)
-    ).all()
+    query = select(Item)
+
+    if author_id:
+        query = query.where(Item.user_id == author_id)
+
+    if created_before:
+        query = query.where(Item.created_at < created_before)
+    if created_after:
+        query = query.where(Item.created_at > created_after)
+
+    if uploaded_before:
+        query = query.where(Item.uploaded_at < uploaded_before)
+    if uploaded_after:
+        query = query.where(Item.uploaded_at > uploaded_after)
+
+    if latitude_min is not None:
+        query = query.where(Item.latitude >= latitude_min)
+    if latitude_max is not None:
+        query = query.where(Item.latitude <= latitude_max)
+
+    if (
+        longitude_min is not None
+        and longitude_max is not None
+        and longitude_min > longitude_max
+    ):
+        # Special case: Longitude range crosses 180/-180 line
+        query = query.where(
+            or_(Item.longitude >= longitude_min, Item.longitude <= longitude_max)
+        )
+
+    else:
+        if longitude_min is not None:
+            query = query.where(Item.longitude >= longitude_min)
+        if longitude_max is not None:
+            query = query.where(Item.longitude <= longitude_max)
+
+    if (
+        nearby_center_latitude is not None
+        and nearby_center_longitude is not None
+        and nearby_radius is not None
+    ):
+        # TODO
+        pass
+
+    if contains_item_type:
+        query = (
+            query.join(BoundingBox, BoundingBox.item_id == Item.id)
+            .where(BoundingBox.item_type == contains_item_type)
+            .distinct()
+        )
+
+    items = session.exec(query.offset(offset).limit(limit)).all()
 
     return [item.into_response() for item in items]
 
