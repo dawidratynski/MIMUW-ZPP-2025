@@ -4,6 +4,8 @@ from uuid import uuid4
 
 import aiofiles
 from fastapi import APIRouter, Form, HTTPException, Query, Security
+from geoalchemy2 import WKTElement
+from geoalchemy2 import functions as geofunc
 from pydantic import TypeAdapter
 from pydantic_core import ValidationError
 from sqlmodel import or_, select
@@ -81,6 +83,7 @@ async def create_item(
 
     item = Item(
         **item.model_dump(),
+        location=WKTElement(f"POINT({item.longitude} {item.latitude})", srid=4326),
         photo_id=photo_id,
         uploaded_at=datetime.now(),
         bounding_boxes=bounding_boxes,
@@ -117,7 +120,7 @@ def search_items(  # noqa: C901
 
     nearby_center_latitude: float | None = Query(ge=-90, le=90, default=None),
     nearby_center_longitude: float | None = Query(ge=-180, le=180, default=None),
-    nearby_radius: float | None = None,
+    nearby_radius_meters: float | None = None,
 
     contains_item_type: ItemType | None = None,
     # fmt: on
@@ -161,10 +164,15 @@ def search_items(  # noqa: C901
     if (
         nearby_center_latitude is not None
         and nearby_center_longitude is not None
-        and nearby_radius is not None
+        and nearby_radius_meters is not None
     ):
-        # TODO
-        pass
+        center_point = (
+            f"SRID=4326;POINT({nearby_center_longitude} {nearby_center_latitude})"
+        )
+
+        query = query.where(
+            geofunc.ST_DWithin(Item.location, center_point, nearby_radius_meters)
+        )
 
     if contains_item_type:
         query = (

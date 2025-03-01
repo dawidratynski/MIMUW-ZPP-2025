@@ -3,8 +3,9 @@ from enum import Enum
 from typing import Self
 
 from fastapi import UploadFile
+from geoalchemy2 import Geography, WKTElement
 from pydantic import model_validator
-from sqlmodel import Field, Index, Relationship, SQLModel
+from sqlmodel import Column, Field, Index, Relationship, SQLModel
 
 
 class ItemType(str, Enum):
@@ -87,6 +88,14 @@ class Item(ItemBase, table=True):  # type: ignore
     photo_id: str
     uploaded_at: datetime = Field(index=True)
     bounding_boxes: list[BoundingBox] = Relationship(back_populates="item")
+
+    location: WKTElement = Field(
+        sa_column=Column(Geography(geometry_type="POINT", srid=4326))
+    )
+
+    class Config:
+        # Required to use WKTElement with pydantic
+        arbitrary_types_allowed = True
 
     def into_response(self) -> ItemResponse:
         return ItemResponse(
