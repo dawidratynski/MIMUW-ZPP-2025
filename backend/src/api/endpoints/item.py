@@ -1,4 +1,5 @@
 from datetime import datetime
+from pathlib import Path
 from typing import Annotated, List
 from uuid import uuid4
 
@@ -29,33 +30,32 @@ router = APIRouter(prefix="/item")
 async def _validate_item_submission(
     item: ItemCreate, bounding_boxes: list[BoundingBoxRequest]
 ):
-    """Checks if the item and photo are a valid submission"""
-    # TODO: Check if file is a photo (maybe using PIL?)
+    """Checks if the item and image are a valid submission"""
+    # TODO: Check if file is an image (maybe using PIL?)
     # TODO: Check if file name is valid
     # TODO: Check if file extension is acceptable and matches detected by PIL
     # TODO: Check if file is acceptable size
-    # TODO: Check if all bounding box coords are within the photo
+    # TODO: Check if all bounding box coords are within the image
     pass
 
 
 async def _validate_and_save_submission(
     item: ItemCreate, bounding_boxes: list[BoundingBoxRequest]
 ) -> str:
-    """Validates the photo and item. If needed, resizes the photo and
-    bounding boxes. Returns photo id."""
+    """Validates the image and item. Returns path where the image was saved."""
 
     await _validate_item_submission(item, bounding_boxes)
 
-    photo_id = uuid4().hex
-    photo_ext = item.photo.filename.split(".")[-1]
-    photo_filename = photo_id + "." + photo_ext
+    image_ext = item.image.filename.split(".")[-1].lower()
+
+    image_path = Path("/image") / f"{uuid4().hex}.{image_ext}"
 
     # Use async file io to not block main event loop
-    async with aiofiles.open(f"/{photo_filename}", "wb+") as f:
-        while photo_chunk := await item.photo.read(1024):
-            await f.write(photo_chunk)
+    async with aiofiles.open(image_path, "wb+") as f:
+        while image_chunk := await item.image.read(1024 * 1024):  # 1 MB
+            await f.write(image_chunk)
 
-    return photo_id
+    return image_path.as_posix()
 
 
 def _extract_bounding_boxes(item: ItemCreate) -> list[BoundingBoxRequest]:
@@ -79,12 +79,12 @@ async def create_item(
     auth_result: str = Security(auth.verify),
 ):
     bounding_boxes = _extract_bounding_boxes(item)
-    photo_id = await _validate_and_save_submission(item, bounding_boxes)
+    image_path = await _validate_and_save_submission(item, bounding_boxes)
 
     item = Item(
         **item.model_dump(),
         location=WKTElement(f"POINT({item.longitude} {item.latitude})", srid=4326),
-        photo_id=photo_id,
+        image_path=image_path,
         uploaded_at=datetime.now(),
         bounding_boxes=bounding_boxes,
     )

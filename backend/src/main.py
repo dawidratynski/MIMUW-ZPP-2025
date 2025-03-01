@@ -1,5 +1,8 @@
+from pathlib import Path
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 
 from api import api
 from core.config import settings
@@ -18,5 +21,8 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+Path("/image").mkdir(parents=True, exist_ok=True)
+app.mount("/image", StaticFiles(directory="/image"), name="image")
 
 app.include_router(api.router)

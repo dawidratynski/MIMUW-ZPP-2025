@@ -70,7 +70,7 @@ class ItemBase(SQLModel):
 
 
 class ItemCreate(ItemBase):
-    photo: UploadFile
+    image: UploadFile
     bounding_boxes_json: (
         str  # JSON-encoded list[BoundingBoxRequest], str due to a bug in swaggerui
     )
@@ -78,14 +78,14 @@ class ItemCreate(ItemBase):
 
 class ItemResponse(ItemBase):
     id: int = Field(default=None, primary_key=True)
-    photo_id: str
+    image_path: str
     uploaded_at: datetime
     bounding_boxes: list[BoundingBoxResponse]
 
 
 class Item(ItemBase, table=True):  # type: ignore
     id: int | None = Field(default=None, primary_key=True)
-    photo_id: str
+    image_path: str
     uploaded_at: datetime = Field(index=True)
     bounding_boxes: list[BoundingBox] = Relationship(back_populates="item")
 
