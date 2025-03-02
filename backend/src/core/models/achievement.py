@@ -18,6 +18,10 @@ class AchievementBase(SQLModel):
     description: str
 
 
+class AchievementRequest(AchievementBase):
+    pass
+
+
 class AchievementResponse(AchievementBase):
     id: int
 

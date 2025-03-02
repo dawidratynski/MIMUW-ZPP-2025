@@ -1,10 +1,11 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Security
 from sqlmodel import select
 
 from core.auth import VerifyToken
 from core.db import SessionDep
 from core.models.achievement import (
     Achievement,
+    AchievementRequest,
     AchievementResponse,
     UserAchievementResponse,
 )
@@ -82,3 +83,18 @@ def unlock_achievement(user_id: str, achievement_id: int, session: SessionDep):
         session.commit()
 
     return UserAchievementResponse(**achievement.model_dump(), unlocked=True)
+
+
+@router.post("/admin/create", response_model=AchievementResponse)
+def admin_create_achievement(
+    achievement: AchievementRequest,
+    session: SessionDep,
+    auth_result: str = Security(auth.verify, scopes=["TODO:admin_scope_or_something"]),
+):
+    saved_achievement = Achievement.model_validate(
+        Achievement(**achievement, unlocked_by=[])
+    )
+    session.add(saved_achievement)
+    session.commit()
+    session.refresh(saved_achievement)
+    return AchievementResponse(**achievement.model_dump())
