@@ -10,6 +10,7 @@ from core.models.achievement import (
     UserAchievementResponse,
 )
 from core.models.user import User
+from core.utils import validate_user_id
 
 auth = VerifyToken()
 
@@ -67,7 +68,14 @@ def get_user_achievement(user_id: str, achievement_id: int, session: SessionDep)
 @router.post(
     "/user/{user_id}/unlock/{achievement_id}", response_model=UserAchievementResponse
 )
-def unlock_achievement(user_id: str, achievement_id: int, session: SessionDep):
+def unlock_achievement(
+    user_id: str,
+    achievement_id: int,
+    session: SessionDep,
+    auth_result: str = Security(auth.verify),
+):
+    validate_user_id(auth_result, user_id)
+
     user = session.get(User, user_id)
 
     if not user:

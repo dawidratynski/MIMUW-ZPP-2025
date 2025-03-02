@@ -3,6 +3,7 @@ from fastapi import APIRouter, Security
 from core.auth import VerifyToken
 from core.db import SessionDep
 from core.models.user import User, UserResponse
+from core.utils import validate_user_id
 
 auth = VerifyToken()
 
@@ -16,13 +17,13 @@ def register_user(
     auth_result: str = Security(auth.verify),
 ):
     """
-    Register user in database if not already present
+    Register user in database if not already present.
     """
 
-    # TODO: Check if user_id matches auth_result OR get user_id from auth_result
+    validate_user_id(auth_result, user_id)
 
-    if session.get(User, user_id):
-        return
+    if user := session.get(User, user_id):
+        return user.into_response()
 
     user = User(id=user_id, achievements=[])
     saved_user = User.model_validate(user)

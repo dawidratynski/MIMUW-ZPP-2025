@@ -21,6 +21,7 @@ from core.models.item import (
     ItemResponse,
     ItemType,
 )
+from core.utils import validate_user_id
 
 auth = VerifyToken()
 
@@ -78,7 +79,7 @@ async def create_item(
     session: SessionDep,
     auth_result: str = Security(auth.verify),
 ):
-    # TODO: Verify user
+    validate_user_id(auth_result, item.user_id)
 
     bounding_boxes = _extract_bounding_boxes(item)
     image_path = await _validate_and_save_submission(item, bounding_boxes)
@@ -205,7 +206,7 @@ def mark_as_collected(
     user_id: str,
     auth_result: str = Security(auth.verify),
 ):
-    # TODO: Verify user
+    validate_user_id(auth_result, user_id)
 
     item = session.get(Item, item_id)
 
