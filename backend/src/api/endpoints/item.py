@@ -78,6 +78,8 @@ async def create_item(
     session: SessionDep,
     auth_result: str = Security(auth.verify),
 ):
+    # TODO: Verify user
+
     bounding_boxes = _extract_bounding_boxes(item)
     image_path = await _validate_and_save_submission(item, bounding_boxes)
 
@@ -192,5 +194,32 @@ def get_item(item_id: int, session: SessionDep):
 
     if not item:
         raise HTTPException(status_code=404, detail="No item with given id found")
+
+    return item.into_response()
+
+
+@router.put("/{item_id}/collect", response_model=ItemResponse)
+def mark_as_collected(
+    session: SessionDep,
+    item_id: int,
+    user_id: str,
+    auth_result: str = Security(auth.verify),
+):
+    # TODO: Verify user
+
+    item = session.get(Item, item_id)
+
+    if not item:
+        raise HTTPException(status_code=404, detail="No item with given id found")
+
+    if item.collected:
+        raise HTTPException(status_code=400, detail="Item is already collected")
+
+    item.collected = True
+    item.collected_by = user_id
+    item.collected_timestamp = datetime.now()
+
+    session.commit()
+    session.refresh(item)
 
     return item.into_response()

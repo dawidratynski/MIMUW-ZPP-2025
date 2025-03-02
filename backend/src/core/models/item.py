@@ -82,12 +82,20 @@ class ItemResponse(ItemBase):
     uploaded_at: datetime
     bounding_boxes: list[BoundingBoxResponse]
 
+    collected: bool
+    collected_by: str | None
+    collected_timestamp: datetime | None
+
 
 class Item(ItemBase, table=True):  # type: ignore
     id: int | None = Field(default=None, primary_key=True)
     image_path: str
     uploaded_at: datetime = Field(index=True)
     bounding_boxes: list[BoundingBox] = Relationship(back_populates="item")
+
+    collected: bool = False
+    collected_by: str | None = None
+    collected_timestamp: datetime | None = None
 
     location: WKTElement = Field(
         sa_column=Column(Geography(geometry_type="POINT", srid=4326))
