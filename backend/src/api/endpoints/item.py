@@ -199,7 +199,7 @@ def get_item(item_id: int, session: SessionDep):
     return item.into_response()
 
 
-@router.put("/{item_id}/collect", response_model=ItemResponse)
+@router.post("/{item_id}/collect", response_model=ItemResponse)
 def mark_as_collected(
     session: SessionDep,
     item_id: int,

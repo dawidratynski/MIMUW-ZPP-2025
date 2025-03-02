@@ -10,7 +10,7 @@ auth = VerifyToken()
 router = APIRouter(prefix="/user")
 
 
-@router.get("/register", response_model=UserResponse)
+@router.post("/register", response_model=UserResponse)
 def register_user(
     user_id: str,
     session: SessionDep,
