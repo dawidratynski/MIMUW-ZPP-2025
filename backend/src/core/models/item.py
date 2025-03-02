@@ -77,7 +77,7 @@ class ItemCreate(ItemBase):
 
 
 class ItemResponse(ItemBase):
-    id: int = Field(default=None, primary_key=True)
+    id: int
     image_path: str
     uploaded_at: datetime
     bounding_boxes: list[BoundingBoxResponse]
