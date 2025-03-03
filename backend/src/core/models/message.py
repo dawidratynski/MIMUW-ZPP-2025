@@ -10,20 +10,21 @@ from sqlmodel import Field, Relationship, SQLModel
 
 class MessageBase(SQLModel):
     message: str
-    timestamp: datetime
 
 
 class MessageRequest(MessageBase):
-    item_id: int
+    pass
 
 
 class MessageResponse(MessageBase):
     id: int
+    timestamp: datetime
     author_id: str
 
 
 class Message(MessageBase, table=True):  # type: ignore
     id: int | None = Field(default=None, primary_key=True)
+    timestamp: datetime
 
     author_id: str = Field(foreign_key="user.id")
     author: "User" = Relationship(back_populates="messages")

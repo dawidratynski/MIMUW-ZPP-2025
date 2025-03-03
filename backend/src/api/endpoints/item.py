@@ -21,6 +21,8 @@ from core.models.item import (
     ItemResponse,
     ItemType,
 )
+from core.models.message import Message, MessageRequest, MessageResponse
+from core.models.user import User
 from core.utils import validate_user_id
 
 auth = VerifyToken()
@@ -212,7 +214,6 @@ def search_items(  # noqa: C901
 @router.get("/{item_id}", response_model=ItemResponse)
 def get_item(item_id: int, session: SessionDep):
     item = session.get(Item, item_id)
-
     if not item:
         raise HTTPException(status_code=404, detail="No item with given id found")
 
@@ -229,7 +230,6 @@ def mark_as_collected(
     validate_user_id(auth_result, user_id)
 
     item = session.get(Item, item_id)
-
     if not item:
         raise HTTPException(status_code=404, detail="No item with given id found")
 
@@ -244,3 +244,51 @@ def mark_as_collected(
     session.refresh(item)
 
     return item.into_response()
+
+
+@router.post("/{item_id}/messages", response_model=MessageResponse)
+def post_message(
+    session: SessionDep,
+    message: MessageRequest,
+    item_id: int,
+    user_id: str,
+    auth_result: str = Security(auth.verify),
+):
+    validate_user_id(auth_result, user_id)
+
+    item = session.get(Item, item_id)
+    if not item:
+        raise HTTPException(404, "Item not found")
+
+    user = session.get(User, user_id)
+    if not user:
+        raise HTTPException(404, "User not found")
+
+    message = Message(
+        **message.model_dump(),
+        item_id=item_id,
+        item=item,
+        timestamp=datetime.now(),
+        author_id=user_id,
+        author=user,
+    )
+
+    saved_message = Message.model_validate(message)
+    session.add(saved_message)
+    session.commit()
+    session.refresh(saved_message)
+
+    return saved_message.into_response()
+
+
+@router.get("/{item_id}/messages", response_model=list[MessageResponse])
+def get_messages(
+    session: SessionDep,
+    item_id: int,
+    auth_result: str = Security(auth.verify),
+):
+    item = session.get(Item, item_id)
+    if not item:
+        raise HTTPException(404, "Item not found")
+
+    return [msg.into_response() for msg in item.messages]
