@@ -25,7 +25,7 @@ from core.utils import validate_user_id
 
 auth = VerifyToken()
 
-router = APIRouter(prefix="/item")
+router = APIRouter(prefix="/items")
 
 
 async def _validate_item_submission(
@@ -73,7 +73,7 @@ def _extract_bounding_boxes(item: ItemCreate) -> list[BoundingBoxRequest]:
         )
 
 
-@router.post("/submit", response_model=ItemResponse)
+@router.post("/", response_model=ItemResponse)
 async def create_item(
     item: Annotated[ItemCreate, Form(media_type="multipart/form-data")],
     session: SessionDep,
@@ -99,7 +99,7 @@ async def create_item(
     return saved_item.into_response()
 
 
-@router.get("/search", response_model=list[ItemResponse])
+@router.get("/", response_model=list[ItemResponse])
 def search_items(  # noqa: C901
     # fmt: off
     session: SessionDep,
@@ -126,6 +126,11 @@ def search_items(  # noqa: C901
     nearby_radius_meters: float | None = None,
 
     contains_item_type: ItemType | None = None,
+
+    collected: bool | None = None,
+    collected_by: str | None = None,
+    collected_before: datetime | None = None,
+    collected_after: datetime | None = None,
     # fmt: on
 ):
     query = select(Item)
@@ -182,6 +187,21 @@ def search_items(  # noqa: C901
             query.join(BoundingBox, BoundingBox.item_id == Item.id)
             .where(BoundingBox.item_type == contains_item_type)
             .distinct()
+        )
+
+    if collected is not None:
+        query = query.where(Item.collected == collected)
+    if collected_by:
+        query = query.where(Item.collected_by == collected_by)
+    if collected_before:
+        query = query.where(
+            Item.collected_timestamp != None,  # noqa: E711
+            Item.collected_timestamp < collected_before,  # type: ignore
+        )
+    if collected_after:
+        query = query.where(
+            Item.collected_timestamp != None,  # noqa: E711
+            Item.collected_timestamp > collected_after,  # type: ignore
         )
 
     items = session.exec(query.offset(offset).limit(limit)).all()
