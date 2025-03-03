@@ -29,9 +29,6 @@ docker compose down
 ```
 
 
-# Organization:
-* Trello: https://trello.com/w/zppcleantheworld
-
 ## License
 
 TODO
