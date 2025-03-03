@@ -4,8 +4,10 @@ from typing import Self
 
 from fastapi import UploadFile
 from geoalchemy2 import Geography, WKTElement
-from pydantic import model_validator
+from pydantic import ConfigDict, model_validator
 from sqlmodel import Column, Field, Index, Relationship, SQLModel
+
+from core.models.message import Message
 
 
 class ItemType(str, Enum):
@@ -101,9 +103,10 @@ class Item(ItemBase, table=True):  # type: ignore
         sa_column=Column(Geography(geometry_type="POINT", srid=4326))
     )
 
-    class Config:
-        # Required to use WKTElement with pydantic
-        arbitrary_types_allowed = True
+    messages: list[Message] = Relationship(back_populates="item")
+
+    # Required to use WKTElement with pydantic
+    model_config = ConfigDict(arbitrary_types_allowed=True)
 
     def into_response(self) -> ItemResponse:
         return ItemResponse(

@@ -1,11 +1,7 @@
-from typing import TYPE_CHECKING
-
-if TYPE_CHECKING:
-    from core.models.achievement import Achievement
-
 from sqlmodel import Field, Relationship, SQLModel
 
-from core.models.achievement import AchievementUserLink
+from core.models.achievement import Achievement, AchievementUserLink
+from core.models.message import Message
 
 
 class UserBase(SQLModel):
@@ -20,6 +16,7 @@ class User(UserBase, table=True):  # type: ignore
     achievements: list["Achievement"] = Relationship(
         back_populates="unlocked_by", link_model=AchievementUserLink
     )
+    messages: list["Message"] = Relationship(back_populates="author")
 
     def into_response(self) -> UserResponse:
         return UserResponse(**self.model_dump())

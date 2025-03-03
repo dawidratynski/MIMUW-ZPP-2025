@@ -27,7 +27,7 @@ def register_user(
     if user := session.get(User, user_id):
         return user.into_response()
 
-    user = User(id=user_id, achievements=[])
+    user = User(id=user_id)
     saved_user = User.model_validate(user)
     session.add(saved_user)
     session.commit()
@@ -105,5 +105,6 @@ def unlock_achievement(
     if achievement not in user.achievements:
         user.achievements.append(achievement)
         session.commit()
+        session.refresh(achievement)
 
     return UserAchievementResponse(**achievement.model_dump(), unlocked=True)

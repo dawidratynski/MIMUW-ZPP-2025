@@ -39,9 +39,9 @@ def create_achievement(
     auth_result: str = Security(auth.verify, scopes=["TODO:admin_scope_or_something"]),
 ):
     saved_achievement = Achievement.model_validate(
-        Achievement(**achievement, unlocked_by=[])
+        Achievement(**achievement.model_dump())
     )
     session.add(saved_achievement)
     session.commit()
     session.refresh(saved_achievement)
-    return AchievementResponse(**achievement.model_dump())
+    return AchievementResponse(**saved_achievement.model_dump())
