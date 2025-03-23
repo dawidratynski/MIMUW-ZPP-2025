@@ -7,6 +7,7 @@ class Settings(BaseSettings):
     project_name: str
     backend_cors_origins: list[AnyHttpUrl] = []
     skip_auth: bool  # Temporary, for easy disabling of auth during development
+    max_file_size: int
 
     # Auth0
     auth0_domain: str

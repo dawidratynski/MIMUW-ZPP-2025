@@ -4,9 +4,10 @@ pydantic~=2.10.6
 pydantic-settings~=2.8.1
 geoalchemy2~=0.17.1
 
-# File upload
+# File upload and validation
 aiofiles~=24.1.0
 python-multipart==0.0.20
+pillow~=11.1.0
 
 # Database
 sqlmodel==0.0.23

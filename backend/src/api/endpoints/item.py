@@ -1,3 +1,4 @@
+import os
 from datetime import datetime
 from pathlib import Path
 from typing import Annotated, List
@@ -7,11 +8,13 @@ import aiofiles
 from fastapi import APIRouter, Form, HTTPException, Query, Security
 from geoalchemy2 import WKTElement
 from geoalchemy2 import functions as geofunc
+from PIL import Image
 from pydantic import TypeAdapter
 from pydantic_core import ValidationError
 from sqlmodel import or_, select
 
 from core.auth import VerifyToken
+from core.config import settings
 from core.db import SessionDep
 from core.models.item import (
     BoundingBox,
@@ -30,16 +33,58 @@ auth = VerifyToken()
 router = APIRouter(prefix="/items")
 
 
-async def _validate_item_submission(
-    item: ItemCreate, bounding_boxes: list[BoundingBoxRequest]
-):
-    """Checks if the item and image are a valid submission"""
-    # TODO: Check if file is an image (maybe using PIL?)
-    # TODO: Check if file name is valid
-    # TODO: Check if file extension is acceptable and matches detected by PIL
-    # TODO: Check if file is acceptable size
-    # TODO: Check if all bounding box coords are within the image
-    pass
+def _validate_submission_metadata(item: ItemCreate):
+    if item.image.size > settings.max_file_size:
+        raise HTTPException(
+            400,
+            f"File too large. Maximum file size is {settings.max_file_size} "
+            f"got {item.image.size}",
+        )
+
+    image_ext = item.image.filename.split(".")[-1].lower()
+
+    if image_ext not in ["jpg", "jpeg", "png", "gif"]:
+        raise HTTPException(
+            400,
+            f"Unsupported image file type: {image_ext}. "
+            f"Supported types: jpg, jpeg, png, gif.",
+        )
+
+
+def _validate_saved_image(image_path: Path, bounding_boxes: list[BoundingBoxRequest]):
+    if os.path.getsize(image_path) > settings.max_file_size:
+        raise HTTPException(
+            400,
+            f"File too large. Maximum file size is {settings.max_file_size}, "
+            f"got {os.path.getsize(image_path)}",
+        )
+
+    try:
+        image = Image.open(image_path)
+        image.verify()
+
+        image = Image.open(image_path)  # Note: PIL closes image after verify()
+        width, height = image.size
+
+    except (IOError, ValueError):
+        raise HTTPException(400, "Invalid or corrupted image")
+
+    if len(bounding_boxes) == 0:
+        raise HTTPException(400, "No bounding boxes provided.")
+
+    for bbox in bounding_boxes:
+        if not (
+            0 <= bbox.x_left < width
+            and 0 <= bbox.x_right < width
+            and 0 <= bbox.y_top < height
+            and 0 <= bbox.y_bottom < height
+        ):
+            raise HTTPException(
+                400, "Bounding box coordinates are out of image bounds."
+            )
+
+        if bbox.x_right <= bbox.x_left or bbox.y_bottom <= bbox.y_top:
+            raise HTTPException(400, "Bounding box has negative width or height.")
 
 
 async def _validate_and_save_submission(
@@ -47,18 +92,32 @@ async def _validate_and_save_submission(
 ) -> str:
     """Validates the image and item. Returns path where the image was saved."""
 
-    await _validate_item_submission(item, bounding_boxes)
+    _validate_submission_metadata(item)
 
     image_ext = item.image.filename.split(".")[-1].lower()
-
     image_path = Path("/image") / f"{uuid4().hex}.{image_ext}"
 
-    # Use async file io to not block main event loop
-    async with aiofiles.open(image_path, "wb+") as f:
-        while image_chunk := await item.image.read(1024 * 1024):  # 1 MB
-            await f.write(image_chunk)
+    image_path.parent.mkdir(parents=True, exist_ok=True)
 
-    return image_path.as_posix()
+    try:
+        async with aiofiles.open(image_path, "wb+") as f:
+            while image_chunk := await item.image.read(1024 * 1024):  # 1 MB
+                await f.write(image_chunk)
+
+        _validate_saved_image(image_path, bounding_boxes)
+
+        return image_path.as_posix()
+
+    except Exception as e:
+        try:
+            os.remove(image_path)
+        except OSError:
+            pass
+
+        if isinstance(e, HTTPException):
+            raise e
+        else:
+            raise HTTPException(500, f"Error while processing image: {str(e)}")
 
 
 def _extract_bounding_boxes(item: ItemCreate) -> list[BoundingBoxRequest]:
