@@ -1,9 +1,15 @@
 name: zpp-app
 services:
+  frontend:
+    build: ./frontend
+    ports:
+      - 80:80
+
   backend:
     build: ./backend
     volumes:
       - ./backend:/backend
+      - images_volume:/image
     ports:
       - 9090:9090
     depends_on:
@@ -18,8 +24,8 @@ services:
     image: postgis/postgis:17-3.5-alpine
     volumes:
       - postgres_data:/var/lib/postgresql/data/
-    ports:
-      - 5432:5432
+    expose:
+      - 5432
     env_file:
       - .env 
     healthcheck:
@@ -30,3 +36,4 @@ services:
 
 volumes:
   postgres_data:
+  images_volume:
