@@ -5,7 +5,6 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 class Settings(BaseSettings):
     # General
     project_name: str
-    backend_cors_origins: list[AnyHttpUrl] = []
     skip_auth: bool  # Temporary, for easy disabling of auth during development
     max_file_size: int
 

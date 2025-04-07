@@ -1,3 +1,6 @@
+# Frontend env file
+/src/env.js
+
 # Logs
 logs
 *.log
