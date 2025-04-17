@@ -163,8 +163,8 @@ function closeFilterPanel() {
 
 <template>
     <div class="map_wrapper">
-        <GoogleMap ref="mapRef" class="map" :api-key="GOOGLE_MAPS_API_KEY" mapId="DEMO_MAP_ID"
-            :center="mapCenter" :zoom="10" @idle="update_map">
+        <GoogleMap ref="mapRef" class="map" :api-key="GOOGLE_MAPS_API_KEY" mapId="DEMO_MAP_ID" :center="mapCenter"
+            :zoom="10" @idle="update_map">
             <div v-for="marker of itemMarkers" :key="marker.id">
                 <AdvancedMarker :options="marker.options" :pin-options="marker.pinOptions"
                     @click="handleMarkerClick(marker.id)" />
@@ -172,14 +172,64 @@ function closeFilterPanel() {
         </GoogleMap>
 
         <!-- Side panel for displaying selected item details -->
-        <div v-if="selectedItem" class="side-panel">
-            <button @click="closePanel" class="close-btn">Close</button>
-            <div class="item-details">
-                <RouterLink :to="'/forum/' + selectedItem.id">Go to Forum</RouterLink>
-                <img :src="photoUrlPrefix + selectedItem.image_path" style="max-width: 100%; height: 40%;" />
-                <pre>{{ selectedItem }}</pre>
+        <div v-if="selectedItem" class="item-details-panel bg-light border-start shadow">
+            <img :src="photoUrlPrefix + selectedItem.image_path" class="item-details-image w-100 rounded"
+                alt="Item Image" />
+
+            <div class="mt-3">
+                <h5 class="fw-bold">Item Details</h5>
             </div>
+
+            <div class="card border-0">
+                <div class="card-body p-0 pt-2">
+                    <ul class="list-group list-group-flush mb-3">
+                        <li class="list-group-item">
+                            <strong>Created:</strong> {{ new Date(selectedItem.created_at).toLocaleString() }}
+                        </li>
+                        <li class="list-group-item">
+                            <strong>Coordinates:</strong>
+                            {{ selectedItem.latitude.toFixed(6) }}, {{ selectedItem.longitude.toFixed(6) }}
+                        </li>
+                        <li class="list-group-item">
+                            <strong>Collected:</strong> {{ selectedItem.collected ? 'Yes' : 'No' }}
+                        </li>
+                        <li class="list-group-item" v-if="selectedItem.collected">
+                            <strong>Collected By:</strong> {{ selectedItem.collected_by }}<br />
+                            <strong>Timestamp:</strong> {{ new Date(selectedItem.collected_timestamp).toLocaleString()
+                            }}
+                        </li>
+                    </ul>
+
+                    <div>
+                        <h6>Bounding Boxes:</h6>
+                        <ul class="list-group">
+                            <li class="list-group-item" v-for="(box, index) in selectedItem.bounding_boxes"
+                                :key="index">
+                                <strong>Type:</strong> {{ box.item_type }}<br />
+                                <strong>Coords:</strong>
+                                ({{ box.x_left }}, {{ box.y_top }}) → ({{ box.x_right }}, {{ box.y_bottom }})
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Forum Button -->
+            <div class="item-details-forum-btn">
+                <RouterLink :to="'/forum/' + selectedItem.id" class="btn btn-outline-primary btn-sm">
+                    View in Forum
+                </RouterLink>
+            </div>
+
+            <!-- Close Button -->
+            <button type="button" class="btn btn-light btn-sm item-details-close" aria-label="Close"
+                @click="closePanel">
+                &times;
+            </button>
         </div>
+
+
+
 
         <!-- Panel + overlay for setting filters -->
         <div>
@@ -317,4 +367,49 @@ function closeFilterPanel() {
     left: 20px;
     z-index: 1070;
 }
+
+.item-details-panel {
+  position: fixed;
+  top: 60px;
+  right: 0;
+  width: 30%;
+  height: calc(100% - 60px);
+  padding: 20px;
+  overflow-y: auto;
+  z-index: 1020;
+  background-color: #f8f9fa;
+  display: flex;
+  flex-direction: column;
+  position: fixed;
+}
+
+.item-details-image {
+  max-height: 50%;
+  object-fit: contain;
+}
+
+.item-details-close {
+  position: absolute;
+  top: 15px;
+  right: 15px;
+  font-size: 1.5rem;
+  font-weight: bold;
+  background-color: #ffffffcc;
+  border: 1px solid #ced4da;
+  border-radius: 50%;
+  width: 36px;
+  height: 36px;
+  line-height: 1;
+  text-align: center;
+  z-index: 1021;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+}
+
+.item-details-forum-btn {
+  position: absolute;
+  bottom: 20px;
+  right: 20px;
+  z-index: 1021;
+}
+
 </style>
