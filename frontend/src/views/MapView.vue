@@ -198,6 +198,9 @@ function closeFilterPanel() {
                             <strong>Timestamp:</strong> {{ new Date(selectedItem.collected_timestamp).toLocaleString()
                             }}
                         </li>
+                        <li class="list-group-item">
+                            <strong>Reported by user:</strong> {{ selectedItem.user_id }}<br />
+                        </li>
                     </ul>
 
                     <div>
@@ -369,47 +372,46 @@ function closeFilterPanel() {
 }
 
 .item-details-panel {
-  position: fixed;
-  top: 60px;
-  right: 0;
-  width: 30%;
-  height: calc(100% - 60px);
-  padding: 20px;
-  overflow-y: auto;
-  z-index: 1020;
-  background-color: #f8f9fa;
-  display: flex;
-  flex-direction: column;
-  position: fixed;
+    position: fixed;
+    top: 60px;
+    right: 0;
+    width: 30%;
+    height: calc(100% - 60px);
+    padding: 20px;
+    overflow-y: auto;
+    z-index: 1020;
+    background-color: #f8f9fa;
+    display: flex;
+    flex-direction: column;
+    position: fixed;
 }
 
 .item-details-image {
-  max-height: 50%;
-  object-fit: contain;
+    max-height: 50%;
+    object-fit: contain;
 }
 
 .item-details-close {
-  position: absolute;
-  top: 15px;
-  right: 15px;
-  font-size: 1.5rem;
-  font-weight: bold;
-  background-color: #ffffffcc;
-  border: 1px solid #ced4da;
-  border-radius: 50%;
-  width: 36px;
-  height: 36px;
-  line-height: 1;
-  text-align: center;
-  z-index: 1021;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    font-size: 1.5rem;
+    font-weight: bold;
+    background-color: #ffffffcc;
+    border: 1px solid #ced4da;
+    border-radius: 50%;
+    width: 36px;
+    height: 36px;
+    line-height: 1;
+    text-align: center;
+    z-index: 1021;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
 }
 
 .item-details-forum-btn {
-  position: absolute;
-  bottom: 20px;
-  right: 20px;
-  z-index: 1021;
+    position: absolute;
+    bottom: 20px;
+    right: 20px;
+    z-index: 1021;
 }
-
 </style>
