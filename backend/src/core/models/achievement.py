@@ -1,3 +1,4 @@
+from datetime import datetime
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -11,6 +12,7 @@ class AchievementUserLink(SQLModel, table=True):  # type: ignore
         default=None, foreign_key="achievement.id", primary_key=True
     )
     user_id: str = Field(foreign_key="user.id", primary_key=True)
+    unlocked_at: datetime = Field(default_factory=datetime.utcnow)
 
 
 class AchievementBase(SQLModel):
@@ -29,6 +31,7 @@ class AchievementResponse(AchievementBase):
 class UserAchievementResponse(AchievementBase):
     id: int
     unlocked: bool
+    unlocked_at: datetime | None = None
 
 
 class Achievement(AchievementBase, table=True):  # type: ignore

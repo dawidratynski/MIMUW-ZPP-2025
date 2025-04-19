@@ -3,7 +3,11 @@ from sqlmodel import select
 
 from core.auth import VerifyToken
 from core.db import SessionDep
-from core.models.achievement import Achievement, UserAchievementResponse
+from core.models.achievement import (
+    Achievement,
+    AchievementUserLink,
+    UserAchievementResponse,
+)
 from core.models.user import User, UserResponse
 from core.utils import validate_user_id
 
@@ -47,18 +51,47 @@ def list_user_achievements(
         raise HTTPException(status_code=404, detail="User not found")
 
     if only_unlocked:
-        return [
-            UserAchievementResponse(**achievement.model_dump(), unlocked=True)
-            for achievement in user.achievements
-        ]
+        result = []
+        for achievement in user.achievements:
+            link = session.exec(
+                select(AchievementUserLink).where(
+                    AchievementUserLink.user_id == user.id,
+                    AchievementUserLink.achievement_id == achievement.id,
+                )
+            ).first()
+            result.append(
+                UserAchievementResponse(
+                    **achievement.model_dump(),
+                    unlocked=True,
+                    unlocked_at=link.unlocked_at if link else None,
+                )
+            )
+        return result
     else:
         all_achievements = session.exec(select(Achievement)).all()
-        return [
-            UserAchievementResponse(
-                **achievement.model_dump(), unlocked=(achievement in user.achievements)
+        result = []
+        for achievement in all_achievements:
+            if achievement in user.achievements:
+                link = session.exec(
+                    select(AchievementUserLink).where(
+                        AchievementUserLink.user_id == user.id,
+                        AchievementUserLink.achievement_id == achievement.id,
+                    )
+                ).first()
+                unlocked = True
+                unlocked_at = link.unlocked_at if link else None
+            else:
+                unlocked = False
+                unlocked_at = None
+
+            result.append(
+                UserAchievementResponse(
+                    **achievement.model_dump(),
+                    unlocked=unlocked,
+                    unlocked_at=unlocked_at,
+                )
             )
-            for achievement in all_achievements
-        ]
+        return result
 
 
 @router.get(
@@ -76,8 +109,22 @@ def get_user_achievement(user_id: str, achievement_id: int, session: SessionDep)
         raise HTTPException(status_code=404, detail="Achievement not found")
 
     unlocked = achievement in user.achievements
+    unlocked_at = None
 
-    return UserAchievementResponse(**achievement.model_dump(), unlocked=unlocked)
+    if unlocked:
+        link = session.exec(
+            select(AchievementUserLink).where(
+                AchievementUserLink.user_id == user.id,
+                AchievementUserLink.achievement_id == achievement.id,
+            )
+        ).first()
+        unlocked_at = link.unlocked_at if link else None
+
+    return UserAchievementResponse(
+        **achievement.model_dump(),
+        unlocked=unlocked,
+        unlocked_at=unlocked_at,
+    )
 
 
 @router.post(
@@ -106,5 +153,17 @@ def unlock_achievement(
         user.achievements.append(achievement)
         session.commit()
         session.refresh(achievement)
+        session.refresh(user)
 
-    return UserAchievementResponse(**achievement.model_dump(), unlocked=True)
+    link = session.exec(
+        select(AchievementUserLink).where(
+            AchievementUserLink.user_id == user.id,
+            AchievementUserLink.achievement_id == achievement.id,
+        )
+    ).first()
+
+    return UserAchievementResponse(
+        **achievement.model_dump(),
+        unlocked=True,
+        unlocked_at=link.unlocked_at if link else None,
+    )
