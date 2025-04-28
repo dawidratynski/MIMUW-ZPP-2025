@@ -2,6 +2,10 @@
 import { ref, watch } from 'vue'
 import { GoogleMap, AdvancedMarker } from 'vue3-google-map'
 import { GOOGLE_MAPS_API_KEY } from '@/env'
+import { useAuth0 } from '@auth0/auth0-vue';
+import { AUTH0_AUDIENCE } from '@/env'
+
+const { getAccessTokenSilently } = useAuth0();
 
 const mapCenter = ref({ lat: 52.212, lng: 20.982 })
 const mapRef = ref(null)
@@ -63,6 +67,21 @@ const contains_item_type_options = {
     unknown: 'unknown',
 }
 
+async function fetchWithAuth(url, queryParams = '') {
+    const accessToken = await getAccessTokenSilently({
+        audience: AUTH0_AUDIENCE,
+    });
+
+    const fullUrl = queryParams ? `${url}?${queryParams}` : url
+
+    return fetch(fullUrl, {
+        method: 'GET',
+        headers: {
+            'Authorization': `Bearer ${accessToken}`,
+        }
+    })
+}
+
 
 function update_map() {
     console.log("Updating map...")
@@ -90,7 +109,7 @@ function fetchItemMarkers() {
         .filter(Boolean) // Remove params that were not set
         .join('&');
 
-    fetch(`${itemQueryUrl}?${queryParams}`)
+    fetchWithAuth(itemQueryUrl, queryParams)
         .then(response => {
             if (!response.ok) {
                 throw new Error('Failed to fetch data from API');
@@ -125,7 +144,7 @@ function fetchItemMarkers() {
 
 
 function fetchItemDetails(id) {
-    fetch(`${itemQueryUrl}${id}`)
+    fetchWithAuth(`${itemQueryUrl}${id}`)
         .then(response => {
             if (!response.ok) {
                 throw new Error('Failed to fetch item details');
