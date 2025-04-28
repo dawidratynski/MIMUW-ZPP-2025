@@ -5,7 +5,7 @@ import { GOOGLE_MAPS_API_KEY } from '@/env'
 import { useAuth0 } from '@auth0/auth0-vue';
 import { AUTH0_AUDIENCE } from '@/env'
 
-const { getAccessTokenSilently } = useAuth0();
+const { getAccessTokenSilently, user, isAuthenticated } = useAuth0();
 
 const mapCenter = ref({ lat: 52.212, lng: 20.982 })
 const mapRef = ref(null)
@@ -57,6 +57,7 @@ const created_before = ref('')
 const created_after = ref('')
 const collected = ref(false)
 const author_id = ref(null)
+const onlyMine = ref(false)
 
 const contains_item_type_options = {
     any: '',
@@ -66,6 +67,14 @@ const contains_item_type_options = {
     metal: 'metal',
     unknown: 'unknown',
 }
+
+watch([onlyMine, user, isAuthenticated], () => {
+    if (onlyMine.value && isAuthenticated.value && user.value?.sub) {
+        author_id.value = user.value.sub;
+    } else if (!onlyMine.value) {
+        author_id.value = null;
+    }
+});
 
 async function fetchWithAuth(url, queryParams = '') {
     const accessToken = await getAccessTokenSilently({
@@ -104,7 +113,8 @@ function fetchItemMarkers() {
         created_before.value && "created_before=" + created_before.value,
         created_after.value && "created_after=" + created_after.value,
         contains_item_type.value && "contains_item_type=" + contains_item_type.value,
-        author_id.value && "author_id=" + author_id.value,
+        onlyMine.value && user.value?.sub && "author_id=" + user.value.sub,
+        !onlyMine.value && author_id.value && "author_id=" + author_id.value,
     ]
         .filter(Boolean) // Remove params that were not set
         .join('&');
@@ -295,7 +305,16 @@ function closeFilterPanel() {
 
                     <div class="mb-3">
                         <label for="textInput" class="form-label">Author ID</label>
-                        <input type="text" id="textInput" class="form-control" v-model="author_id" />
+                        <input type="text" id="textInput" class="form-control" v-model="author_id"
+                            :disabled="onlyMine" />
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">
+                            <input type="checkbox" v-model="onlyMine" :disabled="!isAuthenticated"
+                                class="form-check-input me-2" />
+                            Only mine
+                        </label>
                     </div>
 
                     <button class="btn btn-danger" @click="closeFilterPanel">Close</button>
