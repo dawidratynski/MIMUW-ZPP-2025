@@ -36,7 +36,7 @@ def get_achievement(achievement_id: int, session: SessionDep):
 def create_achievement(
     achievement: AchievementRequest,
     session: SessionDep,
-    user_id: str = Security(auth, scopes=["TODO:admin_scope_or_something"]),
+    user_id: str = Security(auth, scopes=["create:achievements"]),
 ):
     saved_achievement = Achievement.model_validate(
         Achievement(**achievement.model_dump())

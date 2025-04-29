@@ -283,7 +283,7 @@ def get_item(item_id: int, session: SessionDep):
 def mark_as_collected(
     session: SessionDep,
     item_id: int,
-    user_id: str = Security(auth),
+    user_id: str = Security(auth, scopes=["collect:items"]),
 ):
     item = session.get(Item, item_id)
     if not item:
