@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException, Security
 from sqlmodel import select
 
-from core.auth import VerifyToken
+from core.auth import VerifyUserID
 from core.db import SessionDep
 from core.models.achievement import (
     Achievement,
@@ -9,7 +9,7 @@ from core.models.achievement import (
     AchievementResponse,
 )
 
-auth = VerifyToken()
+auth = VerifyUserID()
 
 router = APIRouter(prefix="/achievements")
 
@@ -36,7 +36,7 @@ def get_achievement(achievement_id: int, session: SessionDep):
 def create_achievement(
     achievement: AchievementRequest,
     session: SessionDep,
-    auth_result: str = Security(auth.verify, scopes=["TODO:admin_scope_or_something"]),
+    user_id: str = Security(auth, scopes=["TODO:admin_scope_or_something"]),
 ):
     saved_achievement = Achievement.model_validate(
         Achievement(**achievement.model_dump())

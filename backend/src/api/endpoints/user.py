@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException, Security
 from sqlmodel import select
 
-from core.auth import VerifyToken
+from core.auth import VerifyUserID
 from core.db import SessionDep
 from core.models.achievement import (
     Achievement,
@@ -11,7 +11,7 @@ from core.models.achievement import (
 from core.models.user import User, UserResponse
 from core.utils import validate_user_id
 
-auth = VerifyToken()
+auth = VerifyUserID()
 
 router = APIRouter(prefix="/users")
 
@@ -20,13 +20,13 @@ router = APIRouter(prefix="/users")
 def register_user(
     user_id: str,
     session: SessionDep,
-    auth_result: str = Security(auth.verify),
+    auth_user_id: str = Security(auth),
 ):
     """
     Register user in database if not already present.
     """
 
-    validate_user_id(auth_result, user_id)
+    validate_user_id(auth_user_id, user_id)
 
     if user := session.get(User, user_id):
         return user.into_response()
@@ -135,11 +135,11 @@ def unlock_achievement(
     user_id: str,
     achievement_id: int,
     session: SessionDep,
-    auth_result: str = Security(auth.verify),
+    auth_user_id: str = Security(auth),
 ):
-    validate_user_id(auth_result, user_id)
+    validate_user_id(auth_user_id, user_id)
 
-    user = session.get(User, user_id)
+    user = session.get(User, auth_user_id)
 
     if not user:
         raise HTTPException(status_code=404, detail="User not found")

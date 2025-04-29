@@ -13,7 +13,7 @@ from pydantic import TypeAdapter
 from pydantic_core import ValidationError
 from sqlmodel import or_, select
 
-from core.auth import VerifyToken
+from core.auth import VerifyUserID
 from core.config import settings
 from core.db import SessionDep
 from core.models.item import (
@@ -28,7 +28,7 @@ from core.models.message import Message, MessageRequest, MessageResponse
 from core.models.user import User
 from core.utils import validate_user_id
 
-auth = VerifyToken()
+auth = VerifyUserID()
 
 router = APIRouter(prefix="/items")
 
@@ -138,9 +138,9 @@ def _extract_bounding_boxes(item: ItemCreate) -> list[BoundingBoxRequest]:
 async def create_item(
     item: Annotated[ItemCreate, Form(media_type="multipart/form-data")],
     session: SessionDep,
-    auth_result: str = Security(auth.verify),
+    user_id: str = Security(auth),
 ):
-    validate_user_id(auth_result, item.user_id)
+    validate_user_id(user_id, item.user_id)
 
     bounding_boxes = _extract_bounding_boxes(item)
     image_path = await _validate_and_save_submission(item, bounding_boxes)
@@ -283,11 +283,8 @@ def get_item(item_id: int, session: SessionDep):
 def mark_as_collected(
     session: SessionDep,
     item_id: int,
-    user_id: str,
-    auth_result: str = Security(auth.verify),
+    user_id: str = Security(auth),
 ):
-    validate_user_id(auth_result, user_id)
-
     item = session.get(Item, item_id)
     if not item:
         raise HTTPException(status_code=404, detail="No item with given id found")
@@ -310,11 +307,8 @@ def post_message(
     session: SessionDep,
     message: MessageRequest,
     item_id: int,
-    user_id: str,
-    auth_result: str = Security(auth.verify),
+    user_id: str = Security(auth),
 ):
-    validate_user_id(auth_result, user_id)
-
     item = session.get(Item, item_id)
     if not item:
         raise HTTPException(404, "Item not found")
@@ -344,7 +338,7 @@ def post_message(
 def get_messages(
     session: SessionDep,
     item_id: int,
-    auth_result: str = Security(auth.verify),
+    user_id: str = Security(auth),
 ):
     item = session.get(Item, item_id)
     if not item:

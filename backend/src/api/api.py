@@ -1,9 +1,9 @@
 from fastapi import APIRouter
 
 from api.endpoints import achievement, item, user
-from core.auth import VerifyToken
+from core.auth import VerifyUserID
 
-auth = VerifyToken()
+auth = VerifyUserID()
 
 
 router = APIRouter(prefix="/api/v1")
@@ -11,8 +11,3 @@ router = APIRouter(prefix="/api/v1")
 router.include_router(item.router)
 router.include_router(achievement.router)
 router.include_router(user.router)
-
-# Example endpoints with properly working auth:
-#
-# from api.endpoints import auth_example
-# router.include_router(auth_example.router)
