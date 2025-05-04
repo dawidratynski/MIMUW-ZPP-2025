@@ -1,5 +1,3 @@
-from warnings import deprecated
-
 from fastapi import APIRouter, HTTPException, Security
 from sqlmodel import select
 
@@ -18,8 +16,7 @@ auth = VerifyUserID()
 router = APIRouter(prefix="/users")
 
 
-@deprecated("User is now created automatically if not present in the db")
-@router.post("/{user_id}/register", response_model=UserResponse)
+@router.post("/{user_id}/register", response_model=UserResponse, deprecated=True)
 def register_user(
     user_id: str,
     session: SessionDep,
