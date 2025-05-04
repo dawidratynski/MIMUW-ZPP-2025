@@ -86,18 +86,22 @@ watch([onlyMine, user, isAuthenticated], () => {
 });
 
 async function fetchWithAuth(url, queryParams = '') {
-    const accessToken = await getAccessTokenSilently({
-        audience: AUTH0_AUDIENCE,
-    });
-
     const fullUrl = queryParams ? `${url}?${queryParams}` : url
+    try {
+        const accessToken = await getAccessTokenSilently({
+            audience: AUTH0_AUDIENCE,
+        });
 
-    return fetch(fullUrl, {
-        method: 'GET',
-        headers: {
-            'Authorization': `Bearer ${accessToken}`,
-        }
-    })
+        return fetch(fullUrl, {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${accessToken}`,
+            }
+        })
+    }
+    catch (error) { // eslint-disable-line no-unused-vars
+        return fetch(fullUrl)
+    }
 }
 
 
@@ -117,7 +121,7 @@ watch(() => mapRef.value?.ready, (ready) => {
 function fetchItemMarkers() {
     const queryParams = [
         "offset=0",
-        "limit=1000",
+        "limit=10000",
         collected.value !== null && "collected=" + collected.value,
         created_before.value && "created_before=" + created_before.value,
         created_after.value && "created_after=" + created_after.value,
