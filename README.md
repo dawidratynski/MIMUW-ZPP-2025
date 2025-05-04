@@ -1,7 +1,5 @@
 # CleanTheWorld
 
-TODO: Add description
-
 ## Running the application
 
 ### Initial setup
