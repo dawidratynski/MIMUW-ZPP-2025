@@ -1,8 +1,8 @@
 <template>
     <div class="not-found">
-        <h1>404 - Page Not Found</h1>
-        <p>The page you're looking for doesn't exist.</p>
-        <router-link to="/">Go back home</router-link>
+        <h1>{{ $t('not_found') }}</h1>
+        <p>{{ $t('not_exist') }}</p>
+        <router-link to="/">{{ $t('go_back') }}</router-link>
     </div>
 </template>
 

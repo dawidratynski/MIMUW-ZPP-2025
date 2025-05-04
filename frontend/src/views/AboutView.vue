@@ -5,34 +5,25 @@ import { Mail, Phone, Globe } from 'lucide-vue-next'
 <template>
   <section class="container">
     <div>
-      <h2 class="section-title">O projekcie</h2>
+      <h2 class="section-title">{{ $t('about_project') }}</h2>
       <p class="paragraph">
-        CleanTheWorld to aplikacja mobilna, która umożliwia użytkownikom zgłaszanie napotkanych odpadów
-        poprzez zdjęcia. Wykorzystujemy sztuczną inteligencję do klasyfikacji odpadów na kategorie
-        takie jak papier, szkło, plastik czy metal. Dane z lokalizacją trafiają do naszej bazy,
-        skąd mogą być przekazywane odpowiednim służbom zajmującym się recyklingiem lub utrzymaniem
-        czystości.
+        {{ $t('project_paragraph') }}
       </p>
     </div>
 
     <div>
-      <h2 class="section-title">O fundacji</h2>
+      <h2 class="section-title">{{ $t('about_foundation') }}</h2>
       <p class="paragraph">
-        Jesteśmy organizacją non-profit wspierającą edukację, badania&nbsp;i rozwój nowych technologii – 
-        w&nbsp;szczególności sztucznej inteligencji&nbsp;i informatyki kwantowej, ale również innych dziedzin 
-        matematyki&nbsp;i informatyki. Fundacja została założona 20.11.2019 przez Pawła Gorę&nbsp;i działa na 
-        terenie Polski.
+        {{ $t('foundation_paragraph1') }}
       </p>
       <p class="paragraph">
-        Organizujemy spotkania (np. Warsaw Quantum Computing Group), warsztaty, konkursy&nbsp;i hackathony. 
-        Uczestniczymy w&nbsp;międzynarodowej inicjatywie P-TECH&nbsp;i wspieramy edukację m.in. uczniów I LO w&nbsp;Krakowie. 
-        Współpracujemy także z&nbsp;QWorld, koordynując lokalną inicjatywę QPoland.
+        {{ $t('foundation_paragraph2') }}
       </p>
     </div>
 
 
     <div class="contact-section">
-      <h3 class="contact-title">Kontakt</h3>
+      <h3 class="contact-title">{{ $t('contact') }}</h3>
       <ul class="contact-list">
         <li class="contact-item">
           <Globe class="icon blue" />

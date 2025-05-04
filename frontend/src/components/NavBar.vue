@@ -1,11 +1,15 @@
 <script setup>
 import { useAuth0 } from '@auth0/auth0-vue';
+import { useI18n } from 'vue-i18n'
+import { watch } from 'vue'
 
 const auth0 = useAuth0();
 
 const user = auth0.user;
 const isAuthenticated = auth0.isAuthenticated;
 const isLoading = auth0.isLoading;
+
+const { locale } = useI18n()
 
 
 async function login() {
@@ -21,6 +25,10 @@ async function logout() {
     });
 }
 
+watch(locale, (newLocale) => {
+    localStorage.setItem('app-locale', newLocale)
+})
+
 </script>
 
 <template>
@@ -34,22 +42,28 @@ async function logout() {
             <ul class="navbar-nav me-auto">
                 <li class="nav-item active">
                     <RouterLink class="nav-link" to="/">
-                        Home
+                        {{ $t('home') }}
                     </RouterLink>
                 </li>
                 <li class="nav-item active">
                     <RouterLink class="nav-link" to="/about">
-                        About
+                        {{ $t('about') }}
                     </RouterLink>
                 </li>
             </ul>
             <ul class="navbar-nav ms-auto">
+                <li class="nav-item">
+                    <select id="language-select" v-model="locale">
+                        <option value="pl">Polski</option>
+                        <option value="en">English</option>
+                    </select>
+                </li>
                 <li class="nav-item" v-if="isAuthenticated">
-                    <div class="navbar-text"> Logged in as: {{ user.email }} </div>
+                    <div class="navbar-text"> {{ $t('logged_as') }} {{ user.email }} </div>
                 </li>
                 <li class="nav-item">
-                    <button v-if="isAuthenticated" @click="logout" class="nav-link">Log out</button>
-                    <button v-if="!isAuthenticated && !isLoading" @click="login" class="nav-link">Log in</button>
+                    <button v-if="isAuthenticated" @click="logout" class="nav-link">{{ $t('log_out') }}</button>
+                    <button v-if="!isAuthenticated && !isLoading" @click="login" class="nav-link">{{ $t('log_in') }}</button>
                 </li>
             </ul>
         </div>

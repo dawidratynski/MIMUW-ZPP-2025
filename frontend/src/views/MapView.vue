@@ -1,9 +1,12 @@
 <script setup>
-import { ref, watch } from 'vue'
+import { ref, watch, computed } from 'vue'
 import { GoogleMap, AdvancedMarker } from 'vue3-google-map'
 import { GOOGLE_MAPS_API_KEY } from '@/env'
 import { useAuth0 } from '@auth0/auth0-vue';
 import { AUTH0_AUDIENCE } from '@/env'
+import { useI18n } from 'vue-i18n'
+import Datepicker from '@vuepic/vue-datepicker'
+import '@vuepic/vue-datepicker/dist/main.css'
 
 const { getAccessTokenSilently, user, isAuthenticated } = useAuth0();
 
@@ -59,14 +62,20 @@ const collected = ref(false)
 const author_id = ref(null)
 const onlyMine = ref(false)
 
-const contains_item_type_options = {
-    any: '',
-    paper: 'paper',
-    plastic: 'plastic',
-    glass: 'glass',
-    metal: 'metal',
-    unknown: 'unknown',
-}
+const contains_item_type_options = computed(() => ({
+    any: t('item_type_labels.any'),
+    paper: t('item_type_labels.paper'),
+    plastic: t('item_type_labels.plastic'),
+    glass: t('item_type_labels.glass'),
+    metal: t('item_type_labels.metal'),
+    unknown: t('item_type_labels.unknown')
+}))
+
+const { t, locale } = useI18n()
+
+const datepickerLocale = computed(() => {
+    return locale.value === 'pl' ? 'pl' : 'en'
+})
 
 watch([onlyMine, user, isAuthenticated], () => {
     if (onlyMine.value && isAuthenticated.value && user.value?.sub) {
@@ -210,39 +219,39 @@ function closeFilterPanel() {
                 alt="Item Image" />
 
             <div class="mt-3">
-                <h5 class="fw-bold">Item Details</h5>
+                <h5 class="fw-bold">{{ $t('item_details') }}</h5>
             </div>
 
             <div class="card border-0">
                 <div class="card-body p-0 pt-2">
                     <ul class="list-group list-group-flush mb-3">
                         <li class="list-group-item">
-                            <strong>Created:</strong> {{ new Date(selectedItem.created_at).toLocaleString() }}
+                            <strong>{{ $t('item_created') }}</strong> {{ new Date(selectedItem.created_at).toLocaleString() }}
                         </li>
                         <li class="list-group-item">
-                            <strong>Coordinates:</strong>
+                            <strong>{{ $t('item_coordinates') }}</strong>
                             {{ selectedItem.latitude.toFixed(6) }}, {{ selectedItem.longitude.toFixed(6) }}
                         </li>
                         <li class="list-group-item">
-                            <strong>Collected:</strong> {{ selectedItem.collected ? 'Yes' : 'No' }}
+                            <strong>{{ $t('item_collected') }}</strong> {{ selectedItem.collected ? 'Yes' : 'No' }}
                         </li>
                         <li class="list-group-item" v-if="selectedItem.collected">
-                            <strong>Collected By:</strong> {{ selectedItem.collected_by }}<br />
-                            <strong>Timestamp:</strong> {{ new Date(selectedItem.collected_timestamp).toLocaleString()
+                            <strong>{{ $t('item_collected_by') }}</strong> {{ selectedItem.collected_by }}<br />
+                            <strong>{{ $t('item_timestamp') }}</strong> {{ new Date(selectedItem.collected_timestamp).toLocaleString()
                             }}
                         </li>
                         <li class="list-group-item">
-                            <strong>Reported by user:</strong> {{ selectedItem.user_id }}<br />
+                            <strong>{{ $t('item_reported_by') }}</strong> {{ selectedItem.user_id }}<br />
                         </li>
                     </ul>
 
                     <div>
-                        <h6>Bounding Boxes:</h6>
+                        <h6>{{ $t('item_bboxes') }}</h6>
                         <ul class="list-group">
                             <li class="list-group-item" v-for="(box, index) in selectedItem.bounding_boxes"
                                 :key="index">
-                                <strong>Type:</strong> {{ box.item_type }}<br />
-                                <strong>Coords:</strong>
+                                <strong>{{ $t('item_type') }}</strong> {{ box.item_type }}<br />
+                                <strong>{{ $t('item_coords') }}</strong>
                                 ({{ box.x_left }}, {{ box.y_top }}) → ({{ box.x_right }}, {{ box.y_bottom }})
                             </li>
                         </ul>
@@ -253,7 +262,7 @@ function closeFilterPanel() {
             <!-- Forum Button -->
             <div class="item-details-forum-btn">
                 <RouterLink :to="'/forum/' + selectedItem.id" class="btn btn-outline-primary btn-sm">
-                    View in Forum
+                    {{ $t('forum_view') }}
                 </RouterLink>
             </div>
 
@@ -271,7 +280,7 @@ function closeFilterPanel() {
         <div>
             <!-- Button to open the filter panel -->
             <button v-if="!isFilterPanelVisible" class="btn btn-primary filter-btn" @click="openFilterPanel">
-                Change filters
+                {{ $t('change_filters') }}
             </button>
 
             <!-- Filter Panel -->
@@ -281,7 +290,7 @@ function closeFilterPanel() {
 
                 <div class="filter-panel-content">
                     <div class="mb-3">
-                        <label for="enumSelect" class="form-label">Contains type</label>
+                        <label for="enumSelect" class="form-label">{{ $t('filter_type') }}</label>
                         <select id="enumSelect" class="form-select" v-model="contains_item_type">
                             <option v-for="(value, key) in contains_item_type_options" :key="key" :value="value">{{
                                 value }}</option>
@@ -289,26 +298,28 @@ function closeFilterPanel() {
                     </div>
 
                     <div class="mb-3">
-                        <label for="enumSelect2" class="form-label">Include collected</label>
+                        <label for="enumSelect2" class="form-label">{{ $t('filter_collected') }}</label>
                         <select id="enumSelect2" class="form-select" v-model="collected">
-                            <option :value="null">All</option>
-                            <option :value="false">Only not collected</option>
-                            <option :value="true">Only collected</option>
+                            <option :value="null">{{ $t('filter_all') }}</option>
+                            <option :value="false">{{ $t('filter_not_collected') }}</option>
+                            <option :value="true">{{ $t('filter_only_collected') }}</option>
                         </select>
                     </div>
 
                     <div class="mb-3">
-                        <label for="dateSelector" class="form-label">Created before</label>
-                        <input type="date" id="dateSelector" class="form-control" v-model="created_before" />
+                        <label for="dateSelector" class="form-label">{{ $t('filter_before') }}</label>
+                        <Datepicker id="dateSelector" class="form-control" v-model="created_before" :enable-time-picker="false"
+                        :locale="datepickerLocale" :placeholder="$t('choose_date')" :cancelText="$t('cancel')" :selectText="$t('select')" />
                     </div>
 
                     <div class="mb-3">
-                        <label for="dateSelector" class="form-label">Created after</label>
-                        <input type="date" id="dateSelector" class="form-control" v-model="created_after" />
+                        <label for="dateSelector" class="form-label">{{ $t('filter_after') }}</label>
+                        <Datepicker id="dateSelector" class="form-control" v-model="created_after" :enable-time-picker="false"
+                        :locale="datepickerLocale" :placeholder="$t('choose_date')" :cancelText="$t('cancel')" :selectText="$t('select')" />
                     </div>
 
                     <div class="mb-3">
-                        <label for="textInput" class="form-label">Author ID</label>
+                        <label for="textInput" class="form-label">{{ $t('filter_author') }}</label>
                         <input type="text" id="textInput" class="form-control" v-model="author_id"
                             :disabled="onlyMine" />
                     </div>
@@ -317,11 +328,11 @@ function closeFilterPanel() {
                         <label class="form-label">
                             <input type="checkbox" v-model="onlyMine" :disabled="!isAuthenticated"
                                 class="form-check-input me-2" />
-                            Only mine
+                                {{ $t('filter_mine') }}
                         </label>
                     </div>
 
-                    <button class="btn btn-danger" @click="closeFilterPanel">Close</button>
+                    <button class="btn btn-danger" @click="closeFilterPanel">{{ $t('filter_close') }}</button>
                 </div>
             </div>
         </div>
