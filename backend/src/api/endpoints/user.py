@@ -1,3 +1,5 @@
+from warnings import deprecated
+
 from fastapi import APIRouter, HTTPException, Security
 from sqlmodel import select
 
@@ -8,7 +10,7 @@ from core.models.achievement import (
     AchievementUserLink,
     UserAchievementResponse,
 )
-from core.models.user import User, UserResponse
+from core.models.user import User, UserResponse, ensure_user
 from core.utils import validate_user_id
 
 auth = VerifyUserID()
@@ -16,6 +18,7 @@ auth = VerifyUserID()
 router = APIRouter(prefix="/users")
 
 
+@deprecated("User is now created automatically if not present in the db")
 @router.post("/{user_id}/register", response_model=UserResponse)
 def register_user(
     user_id: str,
@@ -23,6 +26,8 @@ def register_user(
     auth_user_id: str = Security(auth),
 ):
     """
+    Deprecated: User is now created automatically if not present in the db
+
     Register user in database if not already present.
     """
 
@@ -48,7 +53,7 @@ def list_user_achievements(
     user = session.get(User, user_id)
 
     if not user:
-        raise HTTPException(status_code=404, detail="User not found")
+        return []
 
     if only_unlocked:
         result = []
@@ -99,16 +104,12 @@ def list_user_achievements(
 )
 def get_user_achievement(user_id: str, achievement_id: int, session: SessionDep):
     user = session.get(User, user_id)
-
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
-
     achievement = session.get(Achievement, achievement_id)
 
     if not achievement:
         raise HTTPException(status_code=404, detail="Achievement not found")
 
-    unlocked = achievement in user.achievements
+    unlocked = user is not None and achievement in user.achievements
     unlocked_at = None
 
     if unlocked:
@@ -139,10 +140,7 @@ def unlock_achievement(
 ):
     validate_user_id(auth_user_id, user_id)
 
-    user = session.get(User, auth_user_id)
-
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
+    user = ensure_user(user_id, session)
 
     achievement = session.get(Achievement, achievement_id)
 

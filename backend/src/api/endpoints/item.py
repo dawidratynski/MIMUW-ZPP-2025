@@ -25,7 +25,7 @@ from core.models.item import (
     ItemType,
 )
 from core.models.message import Message, MessageRequest, MessageResponse
-from core.models.user import User
+from core.models.user import ensure_user
 from core.utils import validate_user_id
 
 auth = VerifyUserID()
@@ -313,9 +313,7 @@ def post_message(
     if not item:
         raise HTTPException(404, "Item not found")
 
-    user = session.get(User, user_id)
-    if not user:
-        raise HTTPException(404, "User not found")
+    user = ensure_user(user_id, session)
 
     message = Message(
         **message.model_dump(),
