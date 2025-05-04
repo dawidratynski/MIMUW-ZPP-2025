@@ -166,7 +166,7 @@ def search_items(  # noqa: C901
     session: SessionDep,
 
     offset: int = Query(ge=0, default=0),
-    limit: int = Query(le=1000, default=100),
+    limit: int = Query(le=10000, default=100),
 
     author_id: str | None = None,
 
