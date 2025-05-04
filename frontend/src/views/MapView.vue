@@ -112,7 +112,7 @@ watch(() => mapRef.value?.ready, (ready) => {
 function fetchItemMarkers() {
     const queryParams = [
         "offset=0",
-        "limit=1000",
+        "limit=50000",
         collected.value !== null && "collected=" + collected.value,
         created_before.value && "created_before=" + created_before.value,
         created_after.value && "created_after=" + created_after.value,
