@@ -63,7 +63,7 @@ const author_id = ref(null)
 const onlyMine = ref(false)
 
 const contains_item_type_options = computed(() => ({
-    any: t('item_type_labels.any'),
+    '': t('item_type_labels.any'),
     paper: t('item_type_labels.paper'),
     plastic: t('item_type_labels.plastic'),
     glass: t('item_type_labels.glass'),
@@ -223,8 +223,8 @@ function closeFilterPanel() {
             </div>
 
             <div class="card border-0">
-                <div class="card-body p-0 pt-2">
-                    <ul class="list-group list-group-flush mb-3">
+                <div class="card-body p-0">
+                    <ul class="list-group list-group-flush">
                         <li class="list-group-item">
                             <strong>{{ $t('item_created') }}</strong> {{ new Date(selectedItem.created_at).toLocaleString() }}
                         </li>
@@ -233,7 +233,7 @@ function closeFilterPanel() {
                             {{ selectedItem.latitude.toFixed(6) }}, {{ selectedItem.longitude.toFixed(6) }}
                         </li>
                         <li class="list-group-item">
-                            <strong>{{ $t('item_collected') }}</strong> {{ selectedItem.collected ? 'Yes' : 'No' }}
+                            <strong>{{ $t('item_collected') }}</strong> {{ selectedItem.collected ? $t('yes') : $t('no') }}
                         </li>
                         <li class="list-group-item" v-if="selectedItem.collected">
                             <strong>{{ $t('item_collected_by') }}</strong> {{ selectedItem.collected_by }}<br />
@@ -244,18 +244,23 @@ function closeFilterPanel() {
                             <strong>{{ $t('item_reported_by') }}</strong> {{ selectedItem.user_id }}<br />
                         </li>
                     </ul>
+                </div>
+            </div>
 
-                    <div>
-                        <h6>{{ $t('item_bboxes') }}</h6>
-                        <ul class="list-group">
-                            <li class="list-group-item" v-for="(box, index) in selectedItem.bounding_boxes"
-                                :key="index">
-                                <strong>{{ $t('item_type') }}</strong> {{ box.item_type }}<br />
-                                <strong>{{ $t('item_coords') }}</strong>
-                                ({{ box.x_left }}, {{ box.y_top }}) → ({{ box.x_right }}, {{ box.y_bottom }})
-                            </li>
-                        </ul>
-                    </div>
+            <div class="mt-3">
+                <h6 class="fw-bold">{{ $t('item_bboxes') }}</h6>
+            </div>
+            
+            <div class="card border-0">
+                <div class="card-body p-0">
+                    <ul class="list-group">
+                        <li class="list-group-item" v-for="(box, index) in selectedItem.bounding_boxes"
+                            :key="index">
+                            <strong>{{ $t('item_type') }}</strong> {{ $t(`item_type_labels.${box.item_type}`) }}<br />
+                            <strong>{{ $t('item_coords') }}</strong>
+                            ({{ box.x_left }}, {{ box.y_top }}) → ({{ box.x_right }}, {{ box.y_bottom }})
+                        </li>
+                    </ul>
                 </div>
             </div>
 
@@ -292,7 +297,7 @@ function closeFilterPanel() {
                     <div class="mb-3">
                         <label for="enumSelect" class="form-label">{{ $t('filter_type') }}</label>
                         <select id="enumSelect" class="form-select" v-model="contains_item_type">
-                            <option v-for="(value, key) in contains_item_type_options" :key="key" :value="value">{{
+                            <option v-for="(value, key) in contains_item_type_options" :key="key" :value="key">{{
                                 value }}</option>
                         </select>
                     </div>
