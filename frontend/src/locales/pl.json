@@ -16,6 +16,8 @@
     "metal": "metal",
     "unknown": "nieznany"
   },
+  "yes": "Tak",
+  "no": "Nie",
   "change_filters": "Zmień filtry",
   "filter_type": "Zawiera rodzaj",
   "filter_collected": "Uwzględnij",

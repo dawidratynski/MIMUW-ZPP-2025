@@ -52,8 +52,8 @@ watch(locale, (newLocale) => {
                 </li>
             </ul>
             <ul class="navbar-nav ms-auto">
-                <li class="nav-item">
-                    <select id="language-select" v-model="locale">
+                <li class="nav-item py-1">
+                    <select id="language-select" v-model="locale" class="form-select form-select-sm bg-dark" aria-label="Language selector">
                         <option value="pl">Polski</option>
                         <option value="en">English</option>
                     </select>
@@ -69,3 +69,15 @@ watch(locale, (newLocale) => {
         </div>
     </nav>
 </template>
+
+<style scoped>
+#language-select {
+    color: var(--bs-nav-link-color);
+}
+
+@media (max-width: 991px) {
+    #language-select {
+        width: 120px;
+    }
+}
+</style>
