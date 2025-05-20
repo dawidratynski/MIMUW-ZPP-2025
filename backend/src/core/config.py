@@ -6,6 +6,7 @@ class Settings(BaseSettings):
     project_name: str
     skip_auth: bool  # Temporary, for easy disabling of auth during development
     max_file_size: int
+    gemini_api_key: str
 
     # Auth0
     auth0_domain: str

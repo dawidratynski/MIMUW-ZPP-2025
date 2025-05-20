@@ -1,11 +1,13 @@
 import os
 from datetime import datetime
+from io import BytesIO
 from pathlib import Path
 from typing import Annotated, List
 from uuid import uuid4
 
 import aiofiles
-from fastapi import APIRouter, Form, HTTPException, Query, Security
+from fastapi import APIRouter, Form, HTTPException, Query, Security, UploadFile
+from fastapi.concurrency import run_in_threadpool
 from geoalchemy2 import WKTElement
 from geoalchemy2 import functions as geofunc
 from PIL import Image
@@ -16,9 +18,11 @@ from sqlmodel import or_, select
 from core.auth import VerifyUserID
 from core.config import settings
 from core.db import SessionDep
+from core.detection.detection import get_bounding_boxes
 from core.models.item import (
     BoundingBox,
     BoundingBoxRequest,
+    BoundingBoxResponse,
     Item,
     ItemCreate,
     ItemResponse,
@@ -33,15 +37,15 @@ auth = VerifyUserID()
 router = APIRouter(prefix="/items")
 
 
-def _validate_submission_metadata(item: ItemCreate):
-    if item.image.size > settings.max_file_size:
+def _validate_image_metadata(image: UploadFile):
+    if image.size is None or image.size > settings.max_file_size:
         raise HTTPException(
             400,
             f"File too large. Maximum file size is {settings.max_file_size} "
-            f"got {item.image.size}",
+            f"got {image.size}",
         )
 
-    image_ext = item.image.filename.split(".")[-1].lower()
+    image_ext = image.filename.split(".")[-1].lower()
 
     if image_ext not in ["jpg", "jpeg", "png", "gif"]:
         raise HTTPException(
@@ -92,7 +96,7 @@ async def _validate_and_save_submission(
 ) -> str:
     """Validates the image and item. Returns path where the image was saved."""
 
-    _validate_submission_metadata(item)
+    _validate_image_metadata(item.image)
 
     image_ext = item.image.filename.split(".")[-1].lower()
     image_path = Path("/image") / f"{uuid4().hex}.{image_ext}"
@@ -158,6 +162,33 @@ async def create_item(
     session.commit()
     session.refresh(saved_item)
     return saved_item.into_response()
+
+
+@router.post("/detection", response_model=list[BoundingBoxResponse])
+async def detect_items_on_photo(
+    file: UploadFile,
+):
+    _validate_image_metadata(file)
+
+    contents = await file.read()
+
+    if len(contents) > settings.max_file_size:
+        raise HTTPException(
+            400,
+            f"File too large. Maximum file size is {settings.max_file_size} "
+            f"got {len(contents)}",
+        )
+
+    try:
+        image = Image.open(BytesIO(contents))
+        image.verify()
+    except Exception:
+        raise HTTPException(400, "Uploaded file is not a valid image.")
+
+    image = Image.open(BytesIO(contents))
+
+    result = await run_in_threadpool(get_bounding_boxes, image)
+    return result
 
 
 @router.get("/", response_model=list[ItemResponse])

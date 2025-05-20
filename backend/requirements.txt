@@ -3,6 +3,8 @@ uvicorn[standard]~=0.34.0
 pydantic~=2.10.6
 pydantic-settings~=2.8.1
 geoalchemy2~=0.17.1
+ultralytics~=8.3.140
+google.genai ~=1.16.1
 
 # File upload and validation
 aiofiles~=24.1.0
