@@ -1,5 +1,5 @@
 <script setup>
-import { Mail, Phone, Globe } from 'lucide-vue-next'
+import { Mail, Globe } from 'lucide-vue-next'
 </script>
 
 <template>
@@ -38,10 +38,6 @@ import { Mail, Phone, Globe } from 'lucide-vue-next'
             <a href="mailto:warsaw.quantum@gmail.com">warsaw.quantum@gmail.com</a>,
             <a href="mailto:pawel.gora@qaif.org">pawel.gora@qaif.org</a>
           </span>
-        </li>
-        <li class="contact-item">
-          <Phone class="icon" />
-          <span>+48 507 982 292</span>
         </li>
       </ul>
     </div>
