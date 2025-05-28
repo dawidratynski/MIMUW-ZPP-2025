@@ -1,3 +1,5 @@
+from typing import Literal
+
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -7,6 +9,9 @@ class Settings(BaseSettings):
     skip_auth: bool  # Temporary, for easy disabling of auth during development
     max_file_size: int
     gemini_api_key: str
+
+    # Model
+    detection_model: Literal["YOLO", "RTDETR"]
 
     # Auth0
     auth0_domain: str
