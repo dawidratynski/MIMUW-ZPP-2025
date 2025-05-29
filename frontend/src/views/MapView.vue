@@ -15,6 +15,7 @@ const mapRef = ref(null)
 
 const itemMarkers = ref([])
 const selectedItem = ref(null)
+const image = ref(null);
 
 const itemQueryUrl = "http://localhost:9090/api/v1/items/"
 const photoUrlPrefix = "http://localhost:9090"
@@ -201,6 +202,59 @@ function closeFilterPanel() {
     update_map();
 }
 
+let originalWidth = 0;
+let originalHeight = 0;
+let scaledWidth = 0;
+let scaledHeight = 0;
+
+function calculateScalingFactor() {
+    const img = image.value;
+    if (img) {
+        originalWidth = img.naturalWidth;
+        originalHeight = img.naturalHeight;
+        scaledWidth = img.width;
+        scaledHeight = img.height;
+    }
+}
+
+function getBoundingBoxStyle(box) {
+    const img = image.value;
+    if (!img) return {};
+
+    const scaleX = scaledWidth / originalWidth;
+    const scaleY = scaledHeight / originalHeight;
+
+    const type = box.item_type || "unknown";
+    const color = colorMapping[type];
+
+    const left = `${box.x_left * scaleX}px`;
+    const top = `${box.y_top * scaleY}px`;
+    const width = `${(box.x_right - box.x_left) * scaleX}px`;
+    const height = `${(box.y_bottom - box.y_top) * scaleY}px`;
+
+    return {
+        position: 'absolute',
+        left,
+        top,
+        width,
+        height,
+        border: `2px solid ${color.borderColor}`,
+        color: color.glyphColor,
+        boxSizing: 'border-box',
+        pointerEvents: 'none'
+    };
+}
+
+function onImageLoad() {
+    calculateScalingFactor();
+}
+
+watch(() => selectedItem, () => {
+    if (image.value) {
+        calculateScalingFactor();
+    }
+});
+
 </script>
 
 <template>
@@ -215,8 +269,15 @@ function closeFilterPanel() {
 
         <!-- Side panel for displaying selected item details -->
         <div v-if="selectedItem" class="item-details-panel bg-light border-start shadow">
-            <img :src="photoUrlPrefix + selectedItem.image_path" class="item-details-image w-100 rounded"
-                alt="Item Image" />
+            <div class="position-relative">
+                <img :src="photoUrlPrefix + selectedItem.image_path" class="item-details-image w-100 rounded"
+                alt="Item Image" ref="image" @load="onImageLoad" />
+                
+                <div v-for="(box, index) in selectedItem.bounding_boxes" :key="index" 
+                    class="bbox" :style="getBoundingBoxStyle(box)">
+                    <span class="bbox-label">{{ $t(`item_type_labels.${box.item_type}`) }}</span>
+                </div>
+            </div>
 
             <div class="mt-3">
                 <h5 class="fw-bold">{{ $t('item_details') }}</h5>
@@ -445,7 +506,6 @@ function closeFilterPanel() {
 }
 
 .item-details-image {
-    max-height: 50%;
     object-fit: contain;
 }
 
@@ -470,5 +530,21 @@ function closeFilterPanel() {
     position: relative;
     bottom: -10px;
     z-index: 1021;
+}
+
+.bbox {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 12px;
+    padding: 2px 5px;
+    font-weight: bold;
+    top: 0;
+}
+
+.bbox-label {
+    background-color: rgba(0, 0, 0, 0.5);
+    border-radius: 3px;
+    padding: 2px 5px;
 }
 </style>
