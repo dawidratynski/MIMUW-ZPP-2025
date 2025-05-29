@@ -467,9 +467,8 @@ function closeFilterPanel() {
 }
 
 .item-details-forum-btn {
-    position: absolute;
-    bottom: 20px;
-    right: 20px;
+    position: relative;
+    bottom: -10px;
     z-index: 1021;
 }
 </style>
