@@ -232,15 +232,22 @@ function getBoundingBoxStyle(box) {
     const height = `${(box.y_bottom - box.y_top) * scaleY}px`;
 
     return {
-        position: 'absolute',
         left,
         top,
         width,
         height,
         border: `2px solid ${color.borderColor}`,
-        color: color.glyphColor,
         boxSizing: 'border-box',
         pointerEvents: 'none'
+    };
+}
+
+function getLabelColor(box) {
+    const color = colorMapping[box.item_type || 'unknown'];
+
+    return {
+        backgroundColor: color.borderColor,
+        color: color.glyphColor
     };
 }
 
@@ -283,7 +290,8 @@ onBeforeUnmount(() => {
                 
                 <div v-if="imageLoaded" v-for="(box, index) in selectedItem.bounding_boxes"
                     :key="index" class="bbox" :style="getBoundingBoxStyle(box)">
-                    <span class="bbox-label">{{ $t(`item_type_labels.${box.item_type}`) }}</span>
+                    <span class="bbox-label" :style="getLabelColor(box)">
+                        {{ $t(`item_type_labels.${box.item_type}`) }}</span>
                 </div>
             </div>
 
@@ -541,18 +549,17 @@ onBeforeUnmount(() => {
 }
 
 .bbox {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    font-size: 12px;
-    padding: 2px 5px;
-    font-weight: bold;
+    position: absolute;
     top: 0;
 }
 
 .bbox-label {
-    background-color: rgba(0, 0, 0, 0.5);
-    border-radius: 3px;
-    padding: 2px 5px;
+    position: absolute;
+    top: -24px;
+    left: -2px;
+    font-size: 12px;
+    border-radius: 3px 3px 0 0;
+    padding: 2px 4px;
+    pointer-events: none;
 }
 </style>
