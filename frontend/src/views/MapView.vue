@@ -1,5 +1,5 @@
 <script setup>
-import { ref, watch, computed } from 'vue'
+import { ref, watch, computed, onMounted, onBeforeUnmount } from 'vue'
 import { GoogleMap, AdvancedMarker } from 'vue3-google-map'
 import { GOOGLE_MAPS_API_KEY } from '@/env'
 import { useAuth0 } from '@auth0/auth0-vue';
@@ -202,18 +202,18 @@ function closeFilterPanel() {
     update_map();
 }
 
-let originalWidth = 0;
-let originalHeight = 0;
-let scaledWidth = 0;
-let scaledHeight = 0;
+let originalWidth = ref(0);
+let originalHeight = ref(0);
+let scaledWidth = ref(0);
+let scaledHeight = ref(0);
 
 function calculateScalingFactor() {
     const img = image.value;
     if (img) {
-        originalWidth = img.naturalWidth;
-        originalHeight = img.naturalHeight;
-        scaledWidth = img.width;
-        scaledHeight = img.height;
+        originalWidth.value = img.naturalWidth;
+        originalHeight.value = img.naturalHeight;
+        scaledWidth.value = img.width;
+        scaledHeight.value = img.height;
     }
 }
 
@@ -221,11 +221,10 @@ function getBoundingBoxStyle(box) {
     const img = image.value;
     if (!img) return {};
 
-    const scaleX = scaledWidth / originalWidth;
-    const scaleY = scaledHeight / originalHeight;
+    const scaleX = scaledWidth.value / originalWidth.value;
+    const scaleY = scaledHeight.value / originalHeight.value;
 
-    const type = box.item_type || "unknown";
-    const color = colorMapping[type];
+    const color = colorMapping[box.item_type || 'unknown'];
 
     const left = `${box.x_left * scaleX}px`;
     const top = `${box.y_top * scaleY}px`;
@@ -245,14 +244,23 @@ function getBoundingBoxStyle(box) {
     };
 }
 
+let imageLoaded = ref(false);
+
 function onImageLoad() {
     calculateScalingFactor();
+    imageLoaded.value = true;
 }
 
 watch(() => selectedItem, () => {
-    if (image.value) {
-        calculateScalingFactor();
-    }
+    imageLoaded.value = false;
+});
+
+onMounted(() => {
+    window.addEventListener('resize', calculateScalingFactor);
+});
+
+onBeforeUnmount(() => {
+    window.removeEventListener('resize', calculateScalingFactor);
 });
 
 </script>
@@ -273,8 +281,8 @@ watch(() => selectedItem, () => {
                 <img :src="photoUrlPrefix + selectedItem.image_path" class="item-details-image w-100 rounded"
                 alt="Item Image" ref="image" @load="onImageLoad" />
                 
-                <div v-for="(box, index) in selectedItem.bounding_boxes" :key="index" 
-                    class="bbox" :style="getBoundingBoxStyle(box)">
+                <div v-if="imageLoaded" v-for="(box, index) in selectedItem.bounding_boxes"
+                    :key="index" class="bbox" :style="getBoundingBoxStyle(box)">
                     <span class="bbox-label">{{ $t(`item_type_labels.${box.item_type}`) }}</span>
                 </div>
             </div>
